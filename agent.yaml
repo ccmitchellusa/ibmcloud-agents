@@ -1,0 +1,40 @@
+# agent.yaml
+server:
+  port: 8000
+
+handlers:
+  use_discovery: false
+  default: ibmcloud_base_agent
+
+  ibmcloud_base_agent:
+    type: a2a_server.tasks.handlers.google_adk_handler.GoogleADKHandler
+    agent: ibmcloud_base_agent.agent.root_agent
+    name: ibmcloud_base_agent
+    agent_card:
+      name: IBM Cloud Base Agent
+      description: "Base agent for building IBM Cloud agents"
+      url: "https://ibmcloudbaseagent.example.com"
+      version: "0.1.0"
+      documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/README.md"
+      provider:
+        organization: "IBM"
+        url: "https://www.ibm.com"
+      capabilities:
+        streaming: true
+        pushNotifications: false
+      authentication:
+        schemes:
+          - "None"
+      defaultInputModes:
+        - "text/plain"
+      defaultOutputModes:
+        - "text/plain"
+      skills:
+        - id: ibmcloud_commands
+          name: IBM Cloud Commands
+          description: "Use IBM Cloud commands via MCP"
+          tags:
+            - ibmcloud
+            - platform-engineering
+          examples:
+            - "List all resource groups in my account."
