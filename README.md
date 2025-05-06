@@ -1,4 +1,4 @@
-# ☁️ IBM Cloud Base 🤖Agent (A2A compliant) ☁️ 
+# ☁️ IBM Cloud Base Agent 🤖 *(A2A compliant)* 
 
 The base AI agent for building IBM Cloud agents that have built-in access to IBM Cloud CLI commands as MCP tools. 
 
