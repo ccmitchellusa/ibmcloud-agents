@@ -21,13 +21,16 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Installing separately from its dependencies allows optimal layer caching
 ADD . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-editable
+    uv sync --frozen --no-dev --no-editable   
 
 FROM python:3.13-slim-bookworm
 
 COPY --from=uv --chown=app:app /app/.venv /app/.venv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+# Copy IBM Cloud CLI linux-amd64 binary (the MCP Server) into the path.
+COPY ./dist/ibmcloud /usr/local/bin/ibmcloud
 COPY . /app/
+
 
 # Place executables in the environment at the front of the path
 ENV PATH="/usr/local/bin:/app/.venv/bin:$PATH"
@@ -35,6 +38,4 @@ ENV PATH="/usr/local/bin:/app/.venv/bin:$PATH"
 EXPOSE 8000
 
 WORKDIR /app
-
-CMD ["/usr/local/bin/uv","run","-m","pirate_agent_a2a.main","--config","agent.yaml"]
-#CMD ["echo","Hello, World!"]
+CMD ["sh","-c","/usr/local/bin/ibmcloud","login","--apikey","$IBMCLOUD_API_KEY","&&","/usr/local/bin/uv","run","-m","pirate_agent_a2a.main","--config","agent.yaml"]

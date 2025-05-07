@@ -31,6 +31,9 @@ pip install -r requirements.txt
 
 ### Build
 
+This agent requires the linux-amd64 build of the IBMCloud CLI to be located at `dist/ibmcloud`.  Obtain the binary and copy it to this location
+before attempting to build the Container image.
+
 ```bash
 docker build --load -t ibmcloud-base-agent:latest .
 ```

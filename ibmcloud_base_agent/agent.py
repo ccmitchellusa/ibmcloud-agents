@@ -9,13 +9,11 @@ async def create_agent():
     """Gets tools from MCP Server."""
     tools, exit_stack = await MCPToolset.from_server(
         connection_params=StdioServerParameters(
-            command='npx',
-            args=["-y",    # Arguments for the command
-                # Example MCP server command, using filesystem tool:
-                "@modelcontextprotocol/server-filesystem",
-                # TODO: IMPORTANT! Change the path below to an ABSOLUTE path on your system.
-                # TODO: Replace with env var or config.
-                "/Users/chrism1/Code/ai/agentic/a2a/ibmcloud-base-agent"
+            command='ibmcloud',
+            args=["--mcp-transport",    
+                "stdio",
+                "--mcp-include",
+		"resource-group,project,da"
             ],
         )
     )
