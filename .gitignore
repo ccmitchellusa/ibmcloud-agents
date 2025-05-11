@@ -11,6 +11,7 @@ wheels/
 
 # cache
 .pytest_cache
+.DS_Store
 
 # gitignore
 .env
