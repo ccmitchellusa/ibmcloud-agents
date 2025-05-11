@@ -1,9 +1,12 @@
 #!/bin/bash
 
+# import env vars/secrets
+source .env
+
 # Launches the agent(s) using the A2A Server framework
 #
 # Usage: A2A Server (YAML config) [-h] [-c CONFIG] [-p HANDLER_PACKAGES] [--no-discovery] [--log-level {debug,info,warning,error,critical}] [--list-routes] [--enable-flow-diagnosis]
-#
+
 # Options:
 #  -h, --help            show this help message and exit
 #  -c, --config CONFIG   YAML config path, eg. 'agent.yaml' 
@@ -18,6 +21,9 @@
 #                        Enable detailed flow diagnosis and tracing for pub/sub event handling.
 
 # TODO: uv concurrency limit needs to match the Code Engine Max concurrency setting when run on IBM Cloud
+# Login to IBM Cloud using api key. LLM will be acting on user's behalf, with user's access
+# ibmcloud login --apikey IBMCLOUD_APIKEY
+/Users/chrism1/Downloads/ibmcloud login --apikey $IBMCLOUD_API_KEY
 
 # uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug --enable-flow-diagnosis
 uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug --list-routes
