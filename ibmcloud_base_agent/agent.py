@@ -5,9 +5,12 @@ from google.adk.models.lite_llm import LiteLlm
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
 import asyncio
 import threading
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 AGENT_MODEL = "openai/gpt-4o-mini"
-TOOL_FILTER = "resource-group,project,da"
+TOOL_FILTER = "resource_groups"
 
 #TODO: Load the above from os.environ
 
@@ -25,21 +28,19 @@ def run_sync(coro):  # coro is a couroutine
 async def create_agent_with_mcp_servers():
     print("Spawning embedded MCP server(s)...")
     common_exit_stack = AsyncExitStack()
-    print("Loading filesystem tools...")
-    filesystem_tools, _ = await MCPToolset.from_server(
-        connection_params=StdioServerParameters(
-            command='npx',
-            args=["-y",    # Arguments for the command
-                "@modelcontextprotocol/server-filesystem",
-                # TODO: IMPORTANT! Change the path below to an ABSOLUTE path on your system.
-                "/Users/chrism1/Code",
-            ],
-        ),
-        async_exit_stack=common_exit_stack
-    )
-    print(f"Loading ibmcloud tools with filter: {TOOL_FILTER}")
-    from mcp.client.stdio import get_default_environment
-    print(get_default_environment())
+#    print("Loading filesystem tools...")
+#    filesystem_tools, _ = await MCPToolset.from_server(
+#        connection_params=StdioServerParameters(
+#            command='npx',
+#            args=["-y",    # Arguments for the command
+#                "@modelcontextprotocol/server-filesystem",
+#                # TODO: IMPORTANT! Change the path below to an ABSOLUTE path on your system.
+#                "/Users/chrism1/Code",
+#            ],
+#        ),
+#        async_exit_stack=common_exit_stack
+#    )
+    print(f"Initializing IBM Cloud MCP Server with filter: {TOOL_FILTER}")
     ibmcloud_tools, _ = await MCPToolset.from_server(
         connection_params=StdioServerParameters(
             command='/Users/chrism1/Code/cli/bluemix-cli/out/ibmcloud-darwin-arm64',
@@ -64,7 +65,7 @@ async def create_agent_with_mcp_servers():
             "to access and work with cloud resources in IBM Cloud accounts."\
             "Ask the user what resource group to target, and offer to list available resource groups.",
         tools=[
-            *filesystem_tools,
+#            *filesystem_tools,
             *ibmcloud_tools
         ]
     )
