@@ -6,7 +6,7 @@
     "configurations": [
 
         {
-            "name": "Python Debugger: Module",
+            "name": "Agent Debug",
             "type": "debugpy",
             "request": "launch",
             "module": "ibmcloud_base_agent.main",

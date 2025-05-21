@@ -10,7 +10,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 AGENT_MODEL = "openai/gpt-4o-mini"
-TOOL_FILTER = "resource_groups"
+TOOL_FILTER = "target,resource_groups,project,resource_search"
 
 #TODO: Load the above from os.environ
 
@@ -28,18 +28,18 @@ def run_sync(coro):  # coro is a couroutine
 async def create_agent_with_mcp_servers():
     print("Spawning embedded MCP server(s)...")
     common_exit_stack = AsyncExitStack()
-#    print("Loading filesystem tools...")
-#    filesystem_tools, _ = await MCPToolset.from_server(
-#        connection_params=StdioServerParameters(
-#            command='npx',
-#            args=["-y",    # Arguments for the command
-#                "@modelcontextprotocol/server-filesystem",
-#                # TODO: IMPORTANT! Change the path below to an ABSOLUTE path on your system.
-#                "/Users/chrism1/Code",
-#            ],
-#        ),
-#        async_exit_stack=common_exit_stack
-#    )
+    print("Loading filesystem tools...")
+    filesystem_tools, _ = await MCPToolset.from_server(
+        connection_params=StdioServerParameters(
+            command='npx',
+            args=["-y",    # Arguments for the command
+                "@modelcontextprotocol/server-filesystem",
+                # TODO: IMPORTANT! Change the path below to an ABSOLUTE path on your system.
+                "/Users/chrism1/Code",
+            ],
+        ),
+        async_exit_stack=common_exit_stack
+    )
     print(f"Initializing IBM Cloud MCP Server with filter: {TOOL_FILTER}")
     ibmcloud_tools, _ = await MCPToolset.from_server(
         connection_params=StdioServerParameters(
@@ -62,11 +62,16 @@ async def create_agent_with_mcp_servers():
         # TODO: Replace with very specialized instructions for the IBM Cloud agent.
         instruction="You are an IBM Cloud platform engineer called Chris, you will act as a platform engineer with deep expertise " \
             "in IBM Cloud service operations and patterns for cloud architecture. You have access to a set of tools that can be used " \
-            "to access and work with cloud resources in IBM Cloud accounts."\
-            "Ask the user what resource group to target, and offer to list available resource groups.",
+            "to access and work with cloud resources in IBM Cloud accounts." \
+            "For all subsequent prompts, assume the user is interacting with IBM Cloud." \
+            "In IBM Cloud, 'target' is a term used for accounts, resource groups, regions and api endpoints which selects the scope or" \
+            "context that will be used in subsequent tool calls. " \
+            "When a tool's output is not json format, just display the tool's output," \
+            "without further summary or transformation for display--unless specifically asked to do so by the user." \
+            "If a current resource group is not targetted, ask the user what resource group to target, and offer to list available resource groups.",
         tools=[
-#            *filesystem_tools,
-            *ibmcloud_tools
+            *filesystem_tools,
+#            *ibmcloud_tools
         ]
     )
     print("Agent created")
