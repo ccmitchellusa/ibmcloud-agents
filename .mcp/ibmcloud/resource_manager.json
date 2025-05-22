@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ibmcloud": {
+      "command": "/Users/chrism1/Code/cli/bluemix-cli/out/ibmcloud-darwin-arm64",
+      "args": [
+        "--mcp-transport",
+        "stdio",
+        "--mcp-tools",
+        "resource_groups,catalog_list,resource_search,resource_reclamations,resource_reclamation-show,resource_service-instances,resource_service-instance-create,resource_tag-attach,resource_tag-create,resource_tag-delete,resource_tags,resource_subscriptions,resource_subscription,resource_service_instance"
+      ]
+    }
+  }
+}

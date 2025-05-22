@@ -1,80 +1,57 @@
-# ibmcloud_base_agent_a2a/agent.py
-from contextlib import AsyncExitStack
-from google.adk.agents import Agent
-from google.adk.models.lite_llm import LiteLlm
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
-import asyncio
-import threading
-import logging
+"""
+Weather Agent - Assistant with weather capabilities via MCP
+"""
+import json
+from pathlib import Path
+from a2a_server.tasks.handlers.chuk.chuk_agent import create_agent_with_mcp
 
-logging.basicConfig(level=logging.DEBUG)
+#TODO: Load the model from os.environ
+AGENT_MODEL = "gpt-4o-mini"
 
-AGENT_MODEL = "openai/gpt-4o-mini"
-TOOL_FILTER = "target,resource_groups,project,resource_search"
-
-#TODO: Load the above from os.environ
-
-_loop = asyncio.new_event_loop()
-_thr = threading.Thread(target=_loop.run_forever,name="Async Runner",daemon=True)
-
-# This will block the calling thread until the coroutine is finished.
-# Any exception that occurs in the coroutine is raised in the caller
-def run_sync(coro):  # coro is a couroutine
-    if not _thr.is_alive():
-        _thr.start()
-    future = asyncio.run_coroutine_threadsafe(coro, _loop)
-    return future.result()
-
-async def create_agent_with_mcp_servers():
-    print("Spawning embedded MCP server(s)...")
-    common_exit_stack = AsyncExitStack()
-    print("Loading filesystem tools...")
-    filesystem_tools, _ = await MCPToolset.from_server(
-        connection_params=StdioServerParameters(
-            command='npx',
-            args=["-y",    # Arguments for the command
-                "@modelcontextprotocol/server-filesystem",
-                # TODO: IMPORTANT! Change the path below to an ABSOLUTE path on your system.
-                "/Users/chrism1/Code",
-            ],
-        ),
-        async_exit_stack=common_exit_stack
-    )
-    print(f"Initializing IBM Cloud MCP Server with filter: {TOOL_FILTER}")
-    ibmcloud_tools, _ = await MCPToolset.from_server(
-        connection_params=StdioServerParameters(
-            command='/Users/chrism1/Code/cli/bluemix-cli/out/ibmcloud-darwin-arm64',
-            args=[
-                "--mcp-transport",    
+# Create the configuration for the weather MCP server
+config_file = ".mcp/ibmcloud/resource_management.json"
+config = {
+    "mcpServers": {
+        "ibmcloud": {
+            "command": "/Users/chrism1/Code/cli/bluemix-cli/out/ibmcloud-darwin-arm64",
+            "args": [        
+                "--mcp-transport",
                 "stdio",
                 "--mcp-tools",
-		        TOOL_FILTER
+                "resource_groups,catalog_list,resource_search,resource_reclamations,resource_reclamation-show,resource_service-instances,resource_service-instance-create,resource_tag-attach,resource_tag-create,resource_tag-delete,resource_tags,resource_subscriptions,resource_subscription,resource_service_instance"
             ]
-        ),
-        async_exit_stack=common_exit_stack
-    )
- 
-    print("Creating agent...")
-    agent = Agent(
-        name="ibmcloud_base_agent",
-        model=LiteLlm(model=AGENT_MODEL),
-        description="An IBM Cloud platform engineer",
-        # TODO: Replace with very specialized instructions for the IBM Cloud agent.
-        instruction="You are an IBM Cloud platform engineer called Chris, you will act as a platform engineer with deep expertise " \
-            "in IBM Cloud service operations and patterns for cloud architecture. You have access to a set of tools that can be used " \
-            "to access and work with cloud resources in IBM Cloud accounts." \
-            "For all subsequent prompts, assume the user is interacting with IBM Cloud." \
-            "In IBM Cloud, 'target' is a term used for accounts, resource groups, regions and api endpoints which selects the scope or" \
-            "context that will be used in subsequent tool calls. " \
-            "When a tool's output is not json format, just display the tool's output," \
-            "without further summary or transformation for display--unless specifically asked to do so by the user." \
-            "If a current resource group is not targetted, ask the user what resource group to target, and offer to list available resource groups.",
-        tools=[
-            *filesystem_tools,
-#            *ibmcloud_tools
-        ]
-    )
-    print("Agent created")
-    return agent    # ,common_exit_stack  
-                    # TODO: a2a_server doesnt handle coroutines or tuples returned here, but should
-root_agent = run_sync(create_agent_with_mcp_servers())
+        }
+    }
+}
+
+# Ensure config file exists
+config_path = Path(config_file)
+if not config_path.exists():
+    print("Config file does not exist, creating default config.")
+    config_path.write_text(json.dumps(config, indent=2))
+
+# IBM CLoud base agent with native MCP integration
+root_agent = create_agent_with_mcp(
+    name="ibmcloud_base_agent",
+    description="An IBM Cloud platform engineering base agent that can do basic IBM Cloud resource management.",
+    instruction="""
+You are an IBM Cloud platform engineer called Chris, you will act as a platform engineer with deep expertise
+in IBM Cloud service operations and patterns for cloud architecture. You have access to the native tool engine with a set of tools that can be used 
+to access and work with cloud resources in IBM Cloud accounts. For all subsequent prompts, assume the user is interacting with IBM Cloud--you do NOT 
+understand other cloud providers.
+
+When a tool's output is not json format, display the tool's output without further summary or transformation for display--unless specifically asked 
+to do so by the user.
+
+In IBM Cloud, 'target' is a term used to describe how a user selects the accounts, resource groups, regions and api endpoints which act the scope or
+context that will be used in subsequent tool calls. Use the target tool to get the currently targeted account, region, api endpoint and resource group. 
+If a current resource group has not been targetted, target the 'default' resource group, then display the targets to the user.",
+""",
+    mcp_servers=["ibmcloud"],
+    mcp_config_file=config_file,
+    tool_namespace="tools",
+    provider="openai",
+    model=AGENT_MODEL,
+    streaming=True
+)
+

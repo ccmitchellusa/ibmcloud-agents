@@ -7,18 +7,18 @@ handlers:
   default: ibmcloud_base_agent
 
   ibmcloud_base_agent:
-    type: a2a_server.tasks.handlers.google_adk_handler.GoogleADKHandler
+    type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.ChukAgentHandler
     agent: ibmcloud_base_agent.agent.root_agent
     name: ibmcloud_base_agent
     agent_card:
       name: IBM Cloud Base Agent
       description: "Base agent for building IBM Cloud agents"
-      url: "https://ibmcloudbaseagent.example.com"
+      #url: "https://ibmcloudbaseagent.example.com"
       version: "0.1.0"
       documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/README.md"
       provider:
-        organization: "IBM"
-        url: "https://www.ibm.com"
+        organization: "ccmitchellusa"
+        url: "https://www.linkedin.com/in/chris-mitchell-ibm/"
       capabilities:
         streaming: true
         pushNotifications: false
@@ -30,11 +30,12 @@ handlers:
       defaultOutputModes:
         - "text/plain"
       skills:
-        - id: ibmcloud_commands
-          name: IBM Cloud Commands
-          description: "Use IBM Cloud commands via MCP"
+        - id: ibmcloud_platform_engineering
+          name: IBM Cloud Platform Engineering
+          description: "Manages IBM Cloud resources"
           tags:
             - ibmcloud
             - platform-engineering
           examples:
             - "List all resource groups in my account."
+            - "List the service instances in my account."
