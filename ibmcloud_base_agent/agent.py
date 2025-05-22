@@ -1,5 +1,5 @@
 """
-Weather Agent - Assistant with weather capabilities via MCP
+IBM Cloud Platform Engineering base agent with IBMCloud MCP Server built in.
 """
 import json
 from pathlib import Path
