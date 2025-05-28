@@ -56,7 +56,7 @@ In this example, agentic is your icr NAMESPACE and a2a is your REPOSITORY name.
 Replace RESOURCE_GROUP with the name of the resource group where you want the container registry.
 
 ```bash
-# Log docker into the IBM Clouf container registry at icr.io
+# Log docker into the IBM Cloud container registry at icr.io
 ibmcloud cr login 
 ibmcloud cr namespace-add -g RESOURCE_GROUP agentic
 # Build the image and push it to the container registry in the 'agentic' namespace and 'a2a' repository.
@@ -103,7 +103,8 @@ Connect a2a-cli to agent running on Code Engine:
 2. Replace the url in the following snippet with the actual app's url from step 1:
 
 ```bash
-uvx a2a-cli --log-level DEBUG --server https://application-42.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud chat
+uvx a2a-cli --server https://ibmcloud-base-agent.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud chat
+# add --log-level DEBUG for detailed output
 ```
 
 ## Contributing
@@ -120,4 +121,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Acknowledgments
 
-Special thanks to Chris Hayuk and the open-source community for providing tools and inspiration for this project.
+Special thanks to Chris Hay and the open-source community for providing tools and inspiration for this project.
