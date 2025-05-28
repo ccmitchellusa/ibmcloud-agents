@@ -38,4 +38,4 @@ ENV PATH="/usr/local/bin:/app/.venv/bin:$PATH"
 EXPOSE 8000
 
 WORKDIR /app
-CMD ["sh","-c","/usr/local/bin/ibmcloud","login","--apikey","$IBMCLOUD_API_KEY","&&","/usr/local/bin/uv","run","-m","pirate_agent_a2a.main","--config","agent.yaml"]
+CMD ["sh","-c","/usr/local/bin/ibmcloud","login","--apikey","$IBMCLOUD_API_KEY","&&","/usr/local/bin/uv","run","-m","ibmcloud_base_agent.main","--config","agent.yaml"]

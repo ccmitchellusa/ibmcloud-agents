@@ -26,7 +26,7 @@ source .env
 /Users/chrism1/Downloads/ibmcloud login --apikey $IBMCLOUD_API_KEY
 #/Users/chrism1/Downloads/ibmcloud target -g ccm
 # uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug --enable-flow-diagnosis
-uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug --list-routes
+# uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug --list-routes
 # uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug 
-# uv run -m ibmcloud_base_agent.main --config agent.yaml
+uv run -m ibmcloud_base_agent.main --config agent.yaml
 

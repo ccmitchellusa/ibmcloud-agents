@@ -9,7 +9,7 @@ from a2a_server.tasks.handlers.chuk.chuk_agent import create_agent_with_mcp
 AGENT_MODEL = "gpt-4o-mini"
 
 # Create the configuration for the weather MCP server
-config_file = ".mcp/ibmcloud/resource_management.json"
+config_file = ".mcp/ibmcloud/serverless_developer.json"
 config = {
     "mcpServers": {
         "ibmcloud": {
@@ -18,7 +18,7 @@ config = {
                 "--mcp-transport",
                 "stdio",
                 "--mcp-tools",
-                "resource_groups,catalog_list,resource_search,resource_reclamations,resource_reclamation-show,resource_service-instances,resource_service-instance-create,resource_tag-attach,resource_tag-create,resource_tag-delete,resource_tags,resource_subscriptions,resource_subscription,resource_service_instance"
+                "resource_groups,target,code-engine_application_list,code-engine_project_select,code-engine_project_list,code-engine_project_get,code-engine_project_current,code-engine_application_get,code-engine_application_logs,code-engine_application_restart,code-engine_application_create,code-engine_build_list,code-engine-build_get,code-engine_application_events,code-engine_buildrun_logs,code-engine_buildrun_list,code-engine_buildrun_get"
             ]
         }
     }
