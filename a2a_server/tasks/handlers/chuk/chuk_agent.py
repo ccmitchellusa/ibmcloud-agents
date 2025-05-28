@@ -36,6 +36,12 @@ class ChukAgent:
         model: Optional[str] = None,
         streaming: bool = True,
         config: Optional[ProviderConfig] = None,
+        mcp_config_file: Optional[str] = None,
+        mcp_servers: Optional[List[str]] = None,
+        tool_namespace: str = "tools",
+        max_concurrency: int = 4,
+        tool_timeout: float = 30.0,
+        enable_tools: bool = True,
         token_threshold: int = 4000,
         summarization_strategy: str = "key_points",
         enable_memory: bool = True
@@ -393,7 +399,7 @@ This is critical for providing a personalized experience.
                 return "Empty multimodal message"
                 
         return content_parts
-    
+
     async def process_message(
         self, 
         task_id: str, 
@@ -779,3 +785,74 @@ This is critical for providing a personalized experience.
         except Exception as e:
             logger.error(f"Error getting token usage: {e}")
             return {"total_tokens": 0, "total_cost": 0}
+    
+# Factory functions for common agent configurations
+def create_agent_with_mcp(
+    name: str,
+    description: str = "",
+    instruction: str = "",
+    mcp_servers: List[str] = None,
+    mcp_config_file: str = None,
+    provider: str = "openai",
+    model: str = "gpt-4",
+    **kwargs
+) -> ChukAgent:
+    """
+    Create a ChukAgent with MCP tools using the native tool engine.
+    
+    Args:
+        name: Agent name
+        description: Agent description
+        instruction: Agent instructions
+        mcp_servers: List of MCP server names
+        mcp_config_file: Path to MCP configuration file
+        provider: LLM provider
+        model: LLM model
+        **kwargs: Additional ChukAgent arguments
+        
+    Returns:
+        Configured ChukAgent with native tool calling
+    """
+    return ChukAgent(
+        name=name,
+        description=description,
+        instruction=instruction,
+        provider=provider,
+        model=model,
+        mcp_servers=mcp_servers,
+        mcp_config_file=mcp_config_file,
+        enable_tools=True,
+        **kwargs
+    )
+
+def create_simple_agent(
+    name: str,
+    description: str = "",
+    instruction: str = "",
+    provider: str = "openai",
+    model: str = "gpt-4o-mini",
+    **kwargs
+) -> ChukAgent:
+    """
+    Create a simple ChukAgent without tools.
+    
+    Args:
+        name: Agent name
+        description: Agent description  
+        instruction: Agent instructions
+        provider: LLM provider
+        model: LLM model
+        **kwargs: Additional ChukAgent arguments
+        
+    Returns:
+        Simple ChukAgent without tool calling
+    """
+    return ChukAgent(
+        name=name,
+        description=description,
+        instruction=instruction,
+        provider=provider,
+        model=model,
+        enable_tools=False,
+        **kwargs
+    )

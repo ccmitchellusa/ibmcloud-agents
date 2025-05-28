@@ -7,7 +7,7 @@ handlers:
   default: ibmcloud_base_agent
 
   ibmcloud_base_agent:
-    type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.ChukAgentHandler
+    type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
     agent: ibmcloud_base_agent.agent.root_agent
     name: ibmcloud_base_agent
     agent_card:
