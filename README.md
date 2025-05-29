@@ -21,34 +21,25 @@ cd ibmcloud-base-agent
 uv sync --reinstall
 ```
 
-alternatively:
-
-```bash
-pip install -r requirements.txt
-```
-
 ## Containerization
 
 ### Build
 
-This agent requires the linux-amd64 build of the IBMCloud CLI to be located at `dist/ibmcloud`.  Obtain the binary and copy it to this location
-before attempting to build the Container image.
-
 ```bash
-docker build --load -t ibmcloud-base-agent:latest .
+podman build --load -t ibmcloud-base-agent:latest .
 ```
 
 ### Deploy to local Podman, Rancher or Docker desktop
 
 ```bash
-docker images ls
+podman images ls
 ```
 
 1. Get the image id that was pushed
 2. Now run the image (on local podman)
 
 ```bash
-podman run --rm -it ibmcloud-base-agent:latest
+podman run --rm -i -d --env-file=.env -p 8000:8000 ibmcloud-base-agent:latest
 ```
 
 ### Build and deploy to IBM Cloud container registry

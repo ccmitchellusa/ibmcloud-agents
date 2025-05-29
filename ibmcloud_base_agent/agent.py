@@ -13,7 +13,7 @@ config_file = ".mcp/ibmcloud/serverless_developer.json"
 config = {
     "mcpServers": {
         "ibmcloud": {
-            "command": "/Users/chrism1/Code/cli/bluemix-cli/out/ibmcloud-darwin-arm64",
+            "command": "/usr/local/bin/ibmcloud",
             "args": [        
                 "--mcp-transport",
                 "stdio",
