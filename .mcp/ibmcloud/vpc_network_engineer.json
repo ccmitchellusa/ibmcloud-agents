@@ -1,12 +1,12 @@
 {
   "mcpServers": {
     "ibmcloud": {
-      "command": "/Users/chrism1/Code/cli/bluemix-cli/out/ibmcloud-darwin-arm64",
+      "command": "/usr/local/bin/ibmcloud",
       "args": [
-	"--mcp-transport",
-	"stdio",
-	"--mcp-tools",
-	"target,resource_groups,is_vpc,is_vpcs,is_vpcc,is_vpcd,is_subnet,is_vol,is_in,resource_service-instance"
+        "--mcp-transport",
+        "stdio",
+        "--mcp-tools",
+        "target,resource_groups,is_vpc,is_vpcs,is_vpcc,is_vpcd,is_subnet,is_vol,is_in,resource_service-instance"
       ]
     }
   }
