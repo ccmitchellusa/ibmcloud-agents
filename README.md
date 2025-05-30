@@ -56,7 +56,7 @@ docker build -f Dockerfile --push -t icr.io/agentic/a2a .
 
 ```
 
-### Run from source code in IBM Cloud container engine
+### Run from source code in IBM Cloud Code Engine
 
 1. Navigate to Containers/Serverless/Projects
 2. Create a project, eg. “A2A-play”
