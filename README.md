@@ -5,7 +5,7 @@
 ## Features
 
 - **🛠️MCP-compliant IBM Cloud tools**: Select a subset of IBM Cloud tools that can be used by your agent.
-- **🪶Lightweight 🕵️A2A-compliant** protocol support via a2a-server
+- **🪶Lightweight 🕵️A2A-compliant** protocol support via [a2a-server](https://github.com/chrishayuk/a2a-server)
 - **📦Runs on _any_ Container runtime**
 - **🧠BYOM** - Bring your own model (must support 🛠️tool calling)
 
