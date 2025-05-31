@@ -1,15 +1,15 @@
 # ☁️ IBM Cloud Base Agent 🤖 *(A2A compliant)* 
 
-The base AI agent for building IBM Cloud agents that have built-in access to IBM Cloud CLI commands as MCP tools. 
+The base AI agent for building IBM Cloud agents that have built-in access to IBM Cloud MCP tools. 
 The heart of this agent is found in `ibmcloud_base_agent/agent.py`, which has:
 
 - 🧠llm connection
-- 🛠️ibmcloud mcp server tool configuration
+- 🛠️IBMCloud MCP Server tool configuration
 - 🕵️agent 📃instructions.
 
 ## Features
 
-- **MCP-compliant IBM Cloud command support**: Select a subset of IBM Cloud commands that can be used by your agent.
+- **MCP-compliant IBM Cloud command support**: Select a subset of IBM Cloud tools that can be used by your agent.
 
 ## Installation & Setup
 
