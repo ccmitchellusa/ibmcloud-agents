@@ -1,7 +1,11 @@
 # ☁️ IBM Cloud Base Agent 🤖 *(A2A compliant)* 
 
 The base AI agent for building IBM Cloud agents that have built-in access to IBM Cloud CLI commands as MCP tools. 
-The heart of this agent is found in `ibmcloud_base_agent/agent.py`, which has the 🧠llm, 🛠️ibmcloud mcp server tool configuration, and agent 📃instructions.
+The heart of this agent is found in `ibmcloud_base_agent/agent.py`, which has:
+
+- 🧠llm connection
+- 🛠️ibmcloud mcp server tool configuration
+- 🕵️agent 📃instructions.
 
 ## Features
 
@@ -22,15 +26,15 @@ cd ibmcloud-base-agent
 uv sync --reinstall
 ```
 
-## Containerization
+## 📦Containerization
 
-### Build
+### ⚙️Build
 
 ```bash
 podman build --load -t ibmcloud-base-agent:latest .
 ```
 
-### Deploy to local Podman, Rancher or Docker desktop
+### ⚡️Deploy to local Podman, Rancher or Docker desktop
 
 ```bash
 podman images ls
@@ -56,7 +60,7 @@ docker build -f Dockerfile --push -t icr.io/agentic/a2a .
 
 ```
 
-### Run from source code in IBM Cloud Code Engine
+### 🏃Run from source code in IBM Cloud Code Engine
 
 1. Navigate to Containers/Serverless/Projects
 2. Create a project, eg. “A2A-play”
@@ -75,7 +79,7 @@ docker build -f Dockerfile --push -t icr.io/agentic/a2a .
 9. Select Done
 
 
-## CLI Usage
+## 🖥️CLI Usage
 
 Start the agent:
 ```bash
@@ -99,7 +103,7 @@ uvx a2a-cli --server https://ibmcloud-base-agent.1uo9xqkaspg3.us-east.codeengine
 # add --log-level DEBUG for detailed output
 ```
 
-## Contributing
+## 🤝Contributing
 
 Contributions are welcome! Please follow these steps:
 
@@ -107,7 +111,7 @@ Contributions are welcome! Please follow these steps:
 2. Create a new branch for your feature or bug fix.
 3. Submit a pull request with a detailed description of your changes.
 
-## License
+## 🪪License
 
 This project is licensed under the [MIT License](LICENSE).
 
