@@ -3,9 +3,9 @@
 The base AI agent for building IBM Cloud agents that have built-in access to IBM Cloud MCP tools. 
 The heart of this agent is found in `ibmcloud_base_agent/agent.py`, which has:
 
-- 🧠llm connection
+- 🧠LLM connection
 - 🛠️IBMCloud MCP Server tool configuration
-- 🕵️agent 📃instructions.
+- 🕵️Agent 📃instructions.
 
 ## Features
 
