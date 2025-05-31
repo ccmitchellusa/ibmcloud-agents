@@ -9,9 +9,9 @@
 - **📦Runs on _any_ Container runtime**
 - **🧠BYOM** - Bring your own model (must support 🛠️tool calling)
 
-## Simple
+## ❤️Simple
 
-The ❤️heart of this agent is found in `ibmcloud_base_agent/agent.py`, which has:
+The heart of this agent is found in `ibmcloud_base_agent/agent.py`, which has:
 
 - 🧠LLM connection
 - 🛠️IBMCloud MCP Server tool configuration
