@@ -9,7 +9,8 @@ The heart of this agent is found in `ibmcloud_base_agent/agent.py`, which has:
 
 ## Features
 
-- **MCP-compliant IBM Cloud command support**: Select a subset of IBM Cloud tools that can be used by your agent.
+- **MCP-compliant IBM Cloud tools**: Select a subset of IBM Cloud tools that can be used by your agent.
+- **Lightweight A2A-compliant protocol support via a2a-server
 
 ## Installation & Setup
 
