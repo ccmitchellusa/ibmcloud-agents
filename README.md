@@ -72,8 +72,8 @@ docker build -f Dockerfile --push -t icr.io/agentic/a2a .
 2. Create a project, eg. “A2A-play”
 3. Navigate to “Applications”
 4. Create application
-	Name: pirate-agent-a2a
-	Code repo URL: https://github.com/ccmitchellusa/pirate-agent-a2a
+	Name: ibmcloud-agent
+	Code repo URL: https://github.com/ccmitchellusa/ibmcloud-base-agent
 
 5. Navigate to "Optional settings"
 	Image start options
@@ -95,12 +95,12 @@ Open browser on http://0.0.0.0:8000/agent-card.json to view card JSON.
 
 ## A2A CLI Usage
 
-To connect with Chris Hay's A2A CLI client (Localhost):
+To connect with Chris Hay's [A2A CLI](https://github.com/chrishayuk/a2a-cli) client (Localhost):
 ```bash
 uvx a2a-cli --server http://localhost:8000 chat
 
 ```
-Connect a2a-cli to agent running on Code Engine:
+Connect [a2a-cli](https://github.com/chrishayuk/a2a-cli) to agent running on Code Engine:
 1. In the IBM Cloud console> Code Engine > Application page, click "Test Application" in upper right corner.  Copy the app's url.
 2. Replace the url in the following snippet with the actual app's url from step 1:
 
