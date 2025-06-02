@@ -30,4 +30,4 @@ ibmcloud login --apikey $IBMCLOUD_API_KEY -r $IBMCLOUD_REGION
 source /venv/bin/activate
 
 # Run the agent
-/venv/bin/python3 -m ibmcloud_base_agent.main --config agent.yaml --log-level debug
+/venv/bin/python3 -m ibmcloud_base_agent.main --config agent.yaml
