@@ -92,7 +92,6 @@ WORKDIR /app
 USER 1001
 
 # Install IBM Cloud CLI and plugins
-
 RUN if [ -n "${IBMCLOUD_PLUGINS}" ]; then \
         ibmcloud plugin install $IBMCLOUD_PLUGINS -f -q || true; \
     else \
