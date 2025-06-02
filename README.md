@@ -25,8 +25,20 @@ uv sync --reinstall
 
 ### Build
 
+#### Build arguments
+
+You can customize the build process by passing build arguments using the `--build-arg` flag. Below are the available build arguments:
+
+| Argument           | Description                                                                         | Default Value                                         | Stage(s) Used  |
+| ------------------ | ----------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------- |
+| `PYTHON_VERSION`   | Specifies the Python version to install.                                            | `3.12`                                                | Builder, Final |
+| `IBMCLOUD_VERSION` | Specifies the version of the IBM Cloud CLI to install.                              | `2.35.0`                                              | Final          |
+| `IBMCLOUD_ARCH`    | Specifies the architecture for the IBM Cloud CLI download (e.g., `amd64`, `arm64`). | `arm64`                                               | Final          |
+| `IBMCLOUD_PLUGINS` | A comma-separated string of IBM Cloud CLI plugins to install                        | If not specified or empty, all plugins are installed. | Final          |
+
+
 ```bash
-podman build --load -t ibmcloud-base-agent:latest .
+podman build --build-arg IBMCLOUD_PLUGINS="project" -t ibmcloud-base-agent:latest .
 ```
 
 ### Deploy to local Podman, Rancher or Docker desktop
@@ -37,6 +49,17 @@ podman images ls
 
 1. Get the image id that was pushed
 2. Now run the image (on local podman)
+
+#### Environment variables
+```bash
+IBMCLOUD_API_KEY=<Your IBMCloud API Key>
+IBMCLOUD_REGION=us-south
+IBMCLOUD_MCP_TOOLS=
+
+LITELLM_PROXY_URL=
+LITELLM_PROXY_API_KEY=
+LITELLM_PROXY_MODEL=
+```
 
 ```bash
 podman run --rm -i -d --env-file=.env -p 8000:8000 ibmcloud-base-agent:latest
