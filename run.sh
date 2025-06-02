@@ -23,10 +23,10 @@ source .env
 # TODO: uv concurrency limit needs to match the Code Engine Max concurrency setting when run on IBM Cloud
 # Login to IBM Cloud using api key. LLM will be acting on user's behalf, with user's access
 # ibmcloud login --apikey IBMCLOUD_APIKEY
-/Users/chrism1/Downloads/ibmcloud login --apikey $IBMCLOUD_API_KEY
+/<path_to_ibmcloud login --apikey $IBMCLOUD_API_KEY -r us-south
 #/Users/chrism1/Downloads/ibmcloud target -g ccm
 # uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug --enable-flow-diagnosis
 # uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug --list-routes
 # uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug 
-uv run -m ibmcloud_base_agent.main --config agent.yaml
+cd src && uv run -m ibmcloud_base_agent.main --config ../agent.yaml
 
