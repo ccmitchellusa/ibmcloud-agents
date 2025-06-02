@@ -20,7 +20,7 @@ runtime_overlay = {
 }
 provider_config = ProviderConfig(runtime_overlay=runtime_overlay)
 
-IBMCLOUD_MCP_TOOLS = os.getenv("IBMCLOUD_MCP_TOOLS", "")
+IBMCLOUD_MCP_TOOLS = os.getenv("IBMCLOUD_MCP_TOOLS")
 
 # Create the configuration for the MCP server
 config_file = "ibmcloud_mcp_config.json"
@@ -38,7 +38,7 @@ config = {
     }
 }
 
-# Create a temporary file and write the config to it
+# Write config to a file
 config_path = Path(config_file)
 config_path.write_text(json.dumps(config, indent=2))
 
