@@ -15,5 +15,6 @@ wheels/
 
 # gitignore
 .env
+.env.ibmcloud
 .vscode
 src/ibmcloud_mcp_config.json
