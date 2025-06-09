@@ -146,4 +146,5 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## 👏Acknowledgments
 
-Special thanks to Chris Hay and the open-source community for providing tools and inspiration for this project.
+- Special thanks to Chris Hay and the open-source community for a2a-server, a2a-cli and the chuk-* tools used under MIT License as well as inspiration for this project.
+- Makefile based on the work of Mihai Criveti, from [MCP Context Forge](https://github.com/IBM/mcp-context-forge/blob/main/LICENSE) under Apache v2 License.

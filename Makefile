@@ -3,8 +3,8 @@
 #   (A base platform engineering agent with built-in IBMCloud MCP tools)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #
-# Author: Christopher C Mitchell
-# Description: Build & automation helpers for the IBMCloud Base Agent project
+# Author(s): Christopher C Mitchell, Mihai Criveti
+# Description: Awesome Makefile for build & automation helpers for the IBMCloud Base Agent project based on work by Mihai Criveti
 # Usage: run `make` or `make help` to view available targets
 #
 # help: 🕵🏼‍♂️ IBM Cloud Base Agenet (A base platform engineering agent with built-in IBMCloud MCP tools)
@@ -271,7 +271,8 @@ docs: images sbom
 images:
 	@echo "🖼️   Generating documentation diagrams…"
 	@mkdir -p $(DOCS_DIR)/docs/design/images
-	@code2flow mcpgateway/ --output $(DOCS_DIR)/docs/design/images/code2flow.dot || true
+	@code2flow src/ibmcloud_base_agent/ --output $(DOCS_DIR)/docs/design/images/code2flow.dot || true
+	@code2flow src/a2a_server/ --output $(DOCS_DIR)/docs/design/images/a2a_code2flow.dot || true
 	@dot -Tsvg -Gbgcolor=transparent -Gfontname="Arial" -Nfontname="Arial" -Nfontsize=14 -Nfontcolor=black -Nfillcolor=white -Nshape=box -Nstyle="filled,rounded" -Ecolor=gray -Efontname="Arial" -Efontsize=14 -Efontcolor=black $(DOCS_DIR)/docs/design/images/code2flow.dot -o $(DOCS_DIR)/docs/design/images/code2flow.svg || true
 	@python3 -m pip install snakefood3
 	@python3 -m snakefood3 app > snakefood.dot
