@@ -23,7 +23,7 @@ This agent is the default agent that will appear when connecting to the server w
 To switch to the Serverless computing agent in a2a-cli, type `/connect http://<host>:8000/ibmcloud_serverless_agent`
 To switch back to the Base agent, type `/connect http://<host>:8000/ibmcloud_base_agent`
 
-## Serverless Computing Agent Example
+## 🕵🏼‍♂️ Serverless Computing Agent Example
 
 An example specialized agent for Serverless computing using Code Engine is found in `ibmcloud_serverless_agent/agent.py`, which has:
 
