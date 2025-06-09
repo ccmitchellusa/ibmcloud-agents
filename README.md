@@ -144,7 +144,10 @@ Contributions are welcome! Please follow these steps:
 
 This project is licensed under the [MIT License](LICENSE).
 
+- Makefile based on the work of Mihai Criveti, from [MCP Context Forge](https://github.com/IBM/mcp-context-forge/blob/main/LICENSE) under Apache v2 License.
+- Agent is based on [a2a-server](https://github.com/chrishayuk/a2a-server) under MIT License.
+- [IBM Cloud MCP Server](https://github.com/IBM-Cloud/ibmcloud-mcp-server) is built into the containerized version of this agent.
+
 ## 👏Acknowledgments
 
-- Special thanks to Chris Hay and the open-source community for a2a-server, a2a-cli and the chuk-* tools used under MIT License as well as inspiration for this project.
-- Makefile based on the work of Mihai Criveti, from [MCP Context Forge](https://github.com/IBM/mcp-context-forge/blob/main/LICENSE) under Apache v2 License.
+- Special thanks to Chris Hay for the awesome work on a2a-server, a2a-cli, mcp-cli and the chuk-* collection of libraries and for providing inspiration for this project.
