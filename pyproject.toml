@@ -1,7 +1,7 @@
 [project]
 name = "ibmcloud-base-agent"
 version = "0.1.0"
-description = "Base for IBMCloud Agent (A2A-compliant)"
+description = "IBMCloud Base Agent (A2A & MCP-compliant)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -23,4 +23,181 @@ dependencies = [
     "opentelemetry-sdk>=1.33.1",
     "prometheus-client>=0.22.0",
     "python-dotenv>=1.1.0",
+]
+# Optional dependency groups (development)
+dev = [
+    "argparse-manpage>=4.6",
+    "autoflake>=2.3.1",
+    "bandit>=1.8.3",
+    "black>=25.1.0",
+    "bump2version>=1.0.1",
+    "check-manifest>=0.50",
+    "code2flow>=2.5.1",
+    "cookiecutter>=2.6.0",
+    "coverage>=7.8.2",
+    "coverage-badge>=1.1.2",
+    "darglint>=1.8.1",
+    "fawltydeps>=0.19.0",
+    "flake8>=7.2.0",
+    "gprof2dot>=2025.4.14",
+    "importchecker>=3.0",
+    "isort>=6.0.1",
+    "mypy>=1.15.0",
+    "pexpect>=4.9.0",
+    "pip-licenses>=5.0.0",
+    "pip_audit>=2.9.0",
+    "pre-commit>=4.2.0",
+    "pydocstyle>=6.3.0",
+    "pylint>=3.3.7",
+    "pylint-pydantic>=0.3.5",
+    "pyre-check>=0.9.23",
+    "pyright>=1.1.401",
+    "pyroma>=4.2",
+    "pyspelling>=2.10",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=1.0.0",
+    "pytest-cov>=6.1.1",
+    "pytest-examples>=0.0.18",
+    "pytest-md-report>=0.7.0",
+    "pytest-rerunfailures>=15.1",
+    "pytest-xdist>=3.6.1",
+    "pytype>=2024.10.11",
+    "radon>=6.0.1",
+    "ruff>=0.11.11",
+    "settings-doc>=4.3.2",
+    "snakeviz>=2.2.2",
+    "ty>=0.0.1a6",
+    "twine>=6.1.0",
+    "types-tabulate>=0.9.0.20241207",
+]
+
+# Convenience meta-extras
+all = ["ibmcloud_base_agent"]
+dev-all = ["ibmcloud_base_agent[dev]"]
+
+# --------------------------------------------------------------------
+#  Authors and URLs
+# --------------------------------------------------------------------
+[[project.authors]]
+name = "Christopher C Mitchell"
+email = "redacted@ibm.com"
+
+[project.urls]
+Homepage = "https://github.com/ccmitchellusa/ibmcloud-base-agent"
+Documentation = "https://github.com/ccmitchellusa/ibmcloud-base-agent"
+Repository = "https://github.com/ccmitchellusa/ibmcloud-base-agent"
+"Bug Tracker" = "https://github.com/ccmitchellusa/ibmcloud-base-agent/issues"
+Changelog = "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/CHANGELOG.md"
+
+# --------------------------------------------------------------------
+#  🔧 setuptools-specific configuration
+# --------------------------------------------------------------------
+[tool.setuptools]
+include-package-data = true          # ensure wheels include the data files
+
+# Automatic discovery: keep every package that starts with "mcpgateway"
+[tool.setuptools.packages.find]
+include = ["ibmcloud-base-agent*"]
+exclude = ["tests*"]
+
+##  Runtime data files  ------------------------------------------------
+#  - py.typed  -> advertises inline type hints (PEP 561)
+#  - static/*  -> CSS/JS for the admin UI
+#  - templates -> Jinja2 templates shipped at runtime
+[tool.setuptools.package-data]
+ibmcloud-base-agent = [
+  "py.typed",
+]
+# --------------------------------------------------------------------
+#  🛠  Tool configurations (black, mypy, etc.)
+# --------------------------------------------------------------------
+[tool.pytype]
+# Directory-specific options:
+inputs = ["ibmcloud-base-agent"]
+python_version = "3.11"          # match default runtime
+
+[tool.check-manifest]
+ignore = [
+    "docs/**",
+    "tests/**",
+    ".github/**",
+    "Makefile",
+]
+
+[tool.black]
+line-length = 200
+target-version = ["py310", "py311", "py312"]
+include = "\\.pyi?$"
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+strict = true
+show_error_codes = true
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --cov=ibmcloud-base-agent"
+testpaths = [ "tests",]
+asyncio_mode = "auto"
+
+# ── fawltydeps ─────────────────────────────────────────────────────
+[tool.fawltydeps]
+# only parse main pyproject.toml
+deps = ["pyproject.toml"]
+
+# ignore 'dev' extras so they won't show up in fawltydeps
+ignore_unused = [
+  "autoflake",
+  "argparse-manpage",
+  "bandit",
+  "black",
+  "bump2version",
+  "check-manifest",
+  "code2flow",
+  "cookiecutter",
+  "coverage",
+  "coverage-badge",
+  "darglint",
+  "flake8",
+  "fawltydeps",
+  "gprof2dot",
+  "gunicorn",
+  "importchecker",
+  "isort",
+  "ty",
+  "mypy",
+  "pexpect",
+  "pip-licenses",
+  "pip_audit",
+  "pre-commit",
+  "pydocstyle",
+  "pylint",
+  "pylint-pydantic",
+  "pyre-check",
+  "pyright",
+  "pyroma",
+  "pyspelling",
+  "pytest",
+  "pytest-asyncio",
+  "pytest-cov",
+  "pytest-examples",
+  "pytest-md-report",
+  "pytest-rerunfailures",
+  "pytest-xdist",
+  "pytype",
+  "radon",
+  "ruff",
+  "settings-doc",
+  "snakeviz",
+  "types-tabulate",
+  "twine",
+  "uvicorn"
 ]
