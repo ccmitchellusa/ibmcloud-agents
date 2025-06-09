@@ -25,55 +25,54 @@ dependencies = [
     "python-dotenv>=1.1.0",
 ]
 # Optional dependency groups (development)
-dev = [
-    "argparse-manpage>=4.6",
-    "autoflake>=2.3.1",
-    "bandit>=1.8.3",
-    "black>=25.1.0",
-    "bump2version>=1.0.1",
-    "check-manifest>=0.50",
-    "code2flow>=2.5.1",
-    "cookiecutter>=2.6.0",
-    "coverage>=7.8.2",
-    "coverage-badge>=1.1.2",
-    "darglint>=1.8.1",
-    "fawltydeps>=0.19.0",
-    "flake8>=7.2.0",
-    "gprof2dot>=2025.4.14",
-    "importchecker>=3.0",
-    "isort>=6.0.1",
-    "mypy>=1.15.0",
-    "pexpect>=4.9.0",
-    "pip-licenses>=5.0.0",
-    "pip_audit>=2.9.0",
-    "pre-commit>=4.2.0",
-    "pydocstyle>=6.3.0",
-    "pylint>=3.3.7",
-    "pylint-pydantic>=0.3.5",
-    "pyre-check>=0.9.23",
-    "pyright>=1.1.401",
-    "pyroma>=4.2",
-    "pyspelling>=2.10",
-    "pytest>=8.3.5",
-    "pytest-asyncio>=1.0.0",
-    "pytest-cov>=6.1.1",
-    "pytest-examples>=0.0.18",
-    "pytest-md-report>=0.7.0",
-    "pytest-rerunfailures>=15.1",
-    "pytest-xdist>=3.6.1",
-    "pytype>=2024.10.11",
-    "radon>=6.0.1",
-    "ruff>=0.11.11",
-    "settings-doc>=4.3.2",
-    "snakeviz>=2.2.2",
-    "ty>=0.0.1a6",
-    "twine>=6.1.0",
-    "types-tabulate>=0.9.0.20241207",
-]
+#dev = [
+#    "argparse-manpage>=4.6",
+#    "autoflake>=2.3.1",
+#    "bandit>=1.8.3",
+#    "black>=25.1.0",
+#    "bump2version>=1.0.1",
+#    "check-manifest>=0.50",
+#   "cookiecutter>=2.6.0",
+#    "coverage>=7.8.2",
+#    "coverage-badge>=1.1.2",
+#    "darglint>=1.8.1",
+#    "fawltydeps>=0.19.0",
+#    "flake8>=7.2.0",
+#    "gprof2dot>=2025.4.14",
+#    "importchecker>=3.0",
+#    "isort>=6.0.1",
+#    "mypy>=1.15.0",
+#    "pexpect>=4.9.0",
+#    "pip-licenses>=5.0.0",
+#    "pip_audit>=2.9.0",
+#    "pre-commit>=4.2.0",
+#    "pydocstyle>=6.3.0",
+#    "pylint>=3.3.7",
+#    "pylint-pydantic>=0.3.5",
+#    "pyre-check>=0.9.23",
+#    "pyright>=1.1.401",
+#    "pyroma>=4.2",
+#    "pyspelling>=2.10",
+#    "pytest>=8.3.5",
+#    "pytest-asyncio>=1.0.0",
+#    "pytest-cov>=6.1.1",
+#    "pytest-examples>=0.0.18",
+#    "pytest-md-report>=0.7.0",
+#    "pytest-rerunfailures>=15.1",
+#    "pytest-xdist>=3.6.1",
+#    "pytype>=2024.10.11",
+#    "radon>=6.0.1",
+#    "ruff>=0.11.11",
+#    "settings-doc>=4.3.2",
+#    "snakeviz>=2.2.2",
+#    "ty>=0.0.1a6",
+#    "twine>=6.1.0",
+#    "types-tabulate>=0.9.0.20241207",
+#]
 
 # Convenience meta-extras
-all = ["ibmcloud_base_agent"]
-dev-all = ["ibmcloud_base_agent[dev]"]
+#all = ["ibmcloud_base_agent"]
+#dev-all = ["ibmcloud_base_agent[dev]"]
 
 # --------------------------------------------------------------------
 #  Authors and URLs
@@ -104,10 +103,10 @@ exclude = ["tests*"]
 #  - py.typed  -> advertises inline type hints (PEP 561)
 #  - static/*  -> CSS/JS for the admin UI
 #  - templates -> Jinja2 templates shipped at runtime
-[tool.setuptools.package-data]
-ibmcloud-base-agent = [
-  "py.typed",
-]
+#[tool.setuptools.package-data]
+#ibmcloud-base-agent = [
+#  "py.typed",
+#]
 # --------------------------------------------------------------------
 #  🛠  Tool configurations (black, mypy, etc.)
 # --------------------------------------------------------------------
