@@ -39,3 +39,39 @@ handlers:
           examples:
             - "List all resource groups in my account."
             - "List the service instances in my account."
+  ibmcloud_serverless_agent:
+    type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
+    agent: ibmcloud_serverless_agent.agent.root_agent
+    name: ibmcloud_serverless_agent
+    agent_card:
+      name: IBM Cloud Serverless Agent
+      description: "Serverless computing agent for IBM Cloud"
+      #url: "https://ibmcloudbaseagent.example.com"
+      version: "0.1.0"
+      documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/README.md"
+      provider:
+        organization: "ccmitchellusa"
+        url: "https://www.linkedin.com/in/chris-mitchell-ibm/"
+      capabilities:
+        streaming: true
+        pushNotifications: false
+      authentication:
+        schemes:
+          - "None"
+      defaultInputModes:
+        - "text/plain"
+      defaultOutputModes:
+        - "text/plain"
+      skills:
+        - id: ibmcloud_platform_engineering
+          name: IBM Cloud Code Engine
+          description: "Manages IBM Cloud Code Engine resources, including projects, jobs, applications, and environments."
+          tags:
+            - ibmcloud
+            - platform-engineering
+            - serverless
+            - codeengine
+          examples:
+            - "List all serverless projects."
+            - "List the applications."
+            - "Build and deploy an application named 'myapp' in project 'myproj. Use the github repository 'myrepo' and set the default port to 4000. Use the smallest CPU and mempory configuration available, and make sure one instance is always running."

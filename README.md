@@ -1,6 +1,7 @@
 # ☁️ IBM Cloud Base Agent 🤖 *(A2A compliant)* 
 
-**Lightweight** base AI agent for building IBM Cloud agents that have built-in access to IBM Cloud MCP tools. 
+**Lightweight** base AI agent for building IBM Cloud agents that have built-in access to IBM Cloud MCP tools.
+**Platform Engineering Agent examples** Example agents for Serverless computing Redhat Openshift & Kubernetes on IBM Cloud
 
 ## Features
 
@@ -13,9 +14,22 @@
 
 The heart of this agent is found in `ibmcloud_base_agent/agent.py`, which has:
 
-- 🧠LLM connection
-- 🛠️IBMCloud MCP Server tool configuration
-- 🕵️Agent 📃instructions.
+- 🧠LLM connection - LiteLLM
+- 🛠️IBMCloud MCP Server tool configuration for basic IBM Cloud commands to set target context and listing resource groups.
+- 🕵️Agent 📃instructions .
+
+This agent is the default agent that will appear when connecting to the server with a2a-cli (or other a2a client app).
+
+To switch to the Serverless computing agent in a2a-cli, type `/connect http://<host>:8000/ibmcloud_serverless_agent`
+To switch back to the Base agent, type `/connect http://<host>:8000/ibmcloud_base_agent`
+
+## Serverless Computing Agent Example
+
+An example specialized agent for Serverless computing using Code Engine is found in `ibmcloud_serverless_agent/agent.py`, which has:
+
+- 🧠LLM connection - LiteLLM
+- 🛠️IBMCloud MCP Server tool configuration for Code Engine-related tasks
+- 🕵️Agent 📃instructions for Serverless computing on IBM Cloud.
 
 ## Installation & Setup
 
