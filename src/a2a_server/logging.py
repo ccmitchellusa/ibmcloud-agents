@@ -1,4 +1,5 @@
-# a2a_server/logging.py
+# a2a_server/logging.py - Fixed version without duplicates
+
 from __future__ import annotations
 
 import logging
@@ -10,34 +11,53 @@ from pythonjsonlogger.json import JsonFormatter as _JsonFormatter  # type: ignor
 
 __all__ = ["configure_logging"]
 
-
 # ---------------------------------------------------------------------------
-# Default per-module level tweaks
+# Default per-module level tweaks - FIXED DUPLICATES
 # ---------------------------------------------------------------------------
 _DEFAULT_QUIET_MODULES: Dict[str, str] = {
-    "asyncio": "WARNING",
+    "asyncio": "ERROR",
     "uvicorn": "WARNING",
-    "uvicorn.access": "WARNING",
+    "uvicorn.access": "WARNING", 
     "fastapi": "WARNING",
     "httpx": "ERROR",
+    
     # Google ADK noise
     "google": "WARNING",
     "google.adk": "WARNING",
-    "google.adk.models": "WARNING",
-    "google.adk.models.lite_llm": "ERROR",
-    "google.adk.runners": "WARNING",
-    "google.adk.sessions": "WARNING",
-    "google.adk.artifacts": "WARNING",
-    "google.adk.memory": "WARNING",
-    "google.adk.agents": "WARNING",
-    "google.genai": "WARNING",
+    "google.adk.models": "ERROR",
+    "google.adk.models.registry": "ERROR",
+    
     # LiteLLM noise
     "LiteLLM": "ERROR",
     "litellm": "ERROR",
-    "litellm.utils": "ERROR",
-    "litellm.llms": "ERROR",
+    
+    # CHUK modules - Quiet the noise but keep errors
+    "chuk_sessions": "WARNING",
+    "chuk_sessions.session_manager": "ERROR",
+    "chuk_ai_session_manager": "ERROR", 
+    "chuk_ai_session_manager.session_storage": "ERROR",
+    "chuk_llm": "WARNING",
+    
+    # CHUK Tool Processor - Silence the span logging but keep tool execution results
+    "chuk_tool_processor.span": "ERROR",  # Removes start/complete spam
+    "chuk_tool_processor.span.inprocess_execution": "ERROR",  # The main offender
+    "chuk_tool_processor.mcp.stream_manager": "ERROR",  # Reduces MCP init noise
+    "chuk_tool_processor.mcp.setup_sse": "WARNING", # Keep connection info
+    "chuk_tool_processor.mcp.register": "WARNING",  # Keep tool registration
+    
+    # A2A internal modules - Keep important ones visible
+    "a2a_server.transport": "WARNING",
+    "a2a_server.session_store_factory": "WARNING",
+    "a2a_server.tasks.handlers.session_aware_task_handler": "WARNING",
+    "a2a_server.tasks.handlers.chuk.chuk_agent": "INFO",  # Keep for debugging
+    "a2a_server.handlers_setup": "WARNING",
+    "a2a_server.tasks.discovery": "ERROR",
+    
+    # Sample agents - reduce initialization noise but keep operational info
+    "a2a_server.sample_agents.perplexity_agent": "WARNING",
+    "a2a_server.sample_agents.time_agent": "WARNING", 
+    "a2a_server.sample_agents.weather_agent": "WARNING",
 }
-
 
 # ---------------------------------------------------------------------------
 # Public helper

@@ -1,0 +1,640 @@
+#!/usr/bin/env python
+# chuk_tool_processor/execution/strategies/subprocess_strategy.py
+"""
+Subprocess execution strategy - truly runs tools in separate OS processes.
+
+This strategy executes tools in separate Python processes using a process pool,
+providing isolation and potentially better parallelism on multi-core systems.
+
+Properly handles tool serialization and ensures tool_name is preserved.
+"""
+from __future__ import annotations
+
+import asyncio
+import concurrent.futures
+import functools
+import inspect
+import os
+import pickle
+import signal
+import sys
+import traceback
+from datetime import datetime, timezone
+from typing import Any, AsyncIterator, Dict, List, Optional, Tuple, Set
+
+from chuk_tool_processor.models.execution_strategy import ExecutionStrategy
+from chuk_tool_processor.models.tool_call import ToolCall
+from chuk_tool_processor.models.tool_result import ToolResult
+from chuk_tool_processor.registry.interface import ToolRegistryInterface
+from chuk_tool_processor.logging import get_logger, log_context_span
+
+logger = get_logger("chuk_tool_processor.execution.subprocess_strategy")
+
+
+# --------------------------------------------------------------------------- #
+# Module-level helper functions for worker processes - these must be at the module
+# level so they can be pickled
+# --------------------------------------------------------------------------- #
+def _init_worker():
+    """Initialize worker process with signal handlers."""
+    # Ignore keyboard interrupt in workers
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    
+
+def _pool_test_func():
+    """Simple function to test if the process pool is working."""
+    return "ok"
+
+
+def _serialized_tool_worker(
+    tool_name: str,
+    namespace: str,
+    arguments: Dict[str, Any],
+    timeout: Optional[float],
+    serialized_tool_data: bytes
+) -> Dict[str, Any]:
+    """
+    FIXED: Worker function that uses serialized tools and ensures tool_name is available.
+    
+    This worker deserializes the complete tool and executes it, with multiple
+    fallbacks to ensure tool_name is properly set.
+    
+    Args:
+        tool_name: Name of the tool
+        namespace: Namespace of the tool
+        arguments: Arguments to pass to the tool
+        timeout: Optional timeout in seconds
+        serialized_tool_data: Pickled tool instance
+        
+    Returns:
+        Serialized result data
+    """
+    import asyncio
+    import pickle
+    import os
+    import inspect
+    from datetime import datetime, timezone
+    
+    start_time = datetime.now(timezone.utc)
+    pid = os.getpid()
+    hostname = os.uname().nodename
+    
+    result_data = {
+        "tool": tool_name,
+        "namespace": namespace,
+        "start_time": start_time.isoformat(),
+        "end_time": None,
+        "machine": hostname,
+        "pid": pid,
+        "result": None,
+        "error": None,
+    }
+    
+    try:
+        # Deserialize the complete tool
+        tool = pickle.loads(serialized_tool_data)
+        
+        # FIXED: Multiple fallbacks to ensure tool_name is available
+        
+        # Fallback 1: If tool doesn't have tool_name, set it directly
+        if not hasattr(tool, 'tool_name') or not tool.tool_name:
+            tool.tool_name = tool_name
+            
+        # Fallback 2: If it's a class instead of instance, instantiate it
+        if inspect.isclass(tool):
+            try:
+                tool = tool()
+                tool.tool_name = tool_name
+            except Exception as e:
+                result_data["error"] = f"Failed to instantiate tool class: {str(e)}"
+                result_data["end_time"] = datetime.now(timezone.utc).isoformat()
+                return result_data
+        
+        # Fallback 3: Ensure tool_name exists using setattr
+        if not getattr(tool, 'tool_name', None):
+            setattr(tool, 'tool_name', tool_name)
+        
+        # Fallback 4: Verify execute method exists
+        if not hasattr(tool, 'execute'):
+            result_data["error"] = f"Tool missing execute method"
+            result_data["end_time"] = datetime.now(timezone.utc).isoformat()
+            return result_data
+        
+        # Create event loop for execution
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        try:
+            # Execute the tool with timeout
+            if timeout is not None and timeout > 0:
+                result_value = loop.run_until_complete(
+                    asyncio.wait_for(tool.execute(**arguments), timeout)
+                )
+            else:
+                result_value = loop.run_until_complete(tool.execute(**arguments))
+                
+            result_data["result"] = result_value
+            
+        except asyncio.TimeoutError:
+            result_data["error"] = f"Tool execution timed out after {timeout}s"
+        except Exception as e:
+            result_data["error"] = f"Tool execution failed: {str(e)}"
+            
+        finally:
+            loop.close()
+            
+    except Exception as e:
+        result_data["error"] = f"Worker error: {str(e)}"
+        
+    result_data["end_time"] = datetime.now(timezone.utc).isoformat()
+    return result_data
+
+
+# --------------------------------------------------------------------------- #
+# The subprocess strategy
+# --------------------------------------------------------------------------- #
+class SubprocessStrategy(ExecutionStrategy):
+    """
+    Execute tools in separate processes for isolation and parallelism.
+    
+    This strategy creates a pool of worker processes and distributes tool calls
+    among them. Each tool executes in its own process, providing isolation and
+    parallelism.
+    
+    FIXED: Now properly handles tool serialization and tool_name preservation.
+    """
+
+    def __init__(
+        self,
+        registry: ToolRegistryInterface,
+        *,
+        max_workers: int = 4,
+        default_timeout: Optional[float] = None,
+        worker_init_timeout: float = 5.0,
+    ) -> None:
+        """
+        Initialize the subprocess execution strategy.
+        
+        Args:
+            registry: Tool registry for tool lookups
+            max_workers: Maximum number of worker processes
+            default_timeout: Default timeout for tool execution
+            worker_init_timeout: Timeout for worker process initialization
+        """
+        self.registry = registry
+        self.max_workers = max_workers
+        self.default_timeout = default_timeout or 30.0  # Always have a default
+        self.worker_init_timeout = worker_init_timeout
+        
+        # Process pool (initialized lazily)
+        self._process_pool: Optional[concurrent.futures.ProcessPoolExecutor] = None
+        self._pool_lock = asyncio.Lock()
+        
+        # Task tracking for cleanup
+        self._active_tasks: Set[asyncio.Task] = set()
+        self._shutdown_event = asyncio.Event()
+        self._shutting_down = False
+        
+        logger.debug("SubprocessStrategy initialized with timeout: %ss, max_workers: %d", 
+                    self.default_timeout, max_workers)
+        
+        # Register shutdown handler if in main thread
+        try:
+            loop = asyncio.get_running_loop()
+            for sig in (signal.SIGTERM, signal.SIGINT):
+                loop.add_signal_handler(
+                    sig, lambda s=sig: asyncio.create_task(self._signal_handler(s))
+                )
+        except (RuntimeError, NotImplementedError):
+            # Not in the main thread or not on Unix
+            pass
+
+    async def _ensure_pool(self) -> None:
+        """Initialize the process pool if not already initialized."""
+        if self._process_pool is not None:
+            return
+            
+        async with self._pool_lock:
+            if self._process_pool is not None:
+                return
+                
+            # Create process pool
+            self._process_pool = concurrent.futures.ProcessPoolExecutor(
+                max_workers=self.max_workers,
+                initializer=_init_worker,
+            )
+            
+            # Test the pool with a simple task
+            loop = asyncio.get_running_loop()
+            try:
+                # Use a module-level function instead of a lambda
+                await asyncio.wait_for(
+                    loop.run_in_executor(self._process_pool, _pool_test_func),
+                    timeout=self.worker_init_timeout
+                )
+                logger.info("Process pool initialized with %d workers", self.max_workers)
+            except Exception as e:
+                # Clean up on initialization error
+                self._process_pool.shutdown(wait=False)
+                self._process_pool = None
+                logger.error("Failed to initialize process pool: %s", e)
+                raise RuntimeError(f"Failed to initialize process pool: {e}") from e
+    
+    # ------------------------------------------------------------------ #
+    #  🔌 legacy façade for older wrappers                                #
+    # ------------------------------------------------------------------ #
+    async def execute(
+        self,
+        calls: List[ToolCall],
+        *,
+        timeout: Optional[float] = None,
+    ) -> List[ToolResult]:
+        """
+        Back-compat shim.
+
+        Old wrappers (`retry`, `rate_limit`, `cache`, …) still expect an
+        ``execute()`` coroutine on an execution-strategy object.
+        The real implementation lives in :meth:`run`, so we just forward.
+        """
+        return await self.run(calls, timeout)
+    
+    async def run(
+        self,
+        calls: List[ToolCall],
+        timeout: Optional[float] = None,
+    ) -> List[ToolResult]:
+        """
+        Execute tool calls in separate processes.
+        
+        Args:
+            calls: List of tool calls to execute
+            timeout: Optional timeout for each execution (overrides default)
+            
+        Returns:
+            List of tool results in the same order as calls
+        """
+        if not calls:
+            return []
+            
+        if self._shutting_down:
+            # Return early with error results if shutting down
+            return [
+                ToolResult(
+                    tool=call.tool,
+                    result=None,
+                    error="System is shutting down",
+                    start_time=datetime.now(timezone.utc),
+                    end_time=datetime.now(timezone.utc),
+                    machine=os.uname().nodename,
+                    pid=os.getpid(),
+                )
+                for call in calls
+            ]
+        
+        # Use default_timeout if no timeout specified
+        effective_timeout = timeout if timeout is not None else self.default_timeout
+        logger.debug("Executing %d calls in subprocesses with %ss timeout each", len(calls), effective_timeout)
+            
+        # Create tasks for each call
+        tasks = []
+        for call in calls:
+            task = asyncio.create_task(self._execute_single_call(
+                call, effective_timeout  # Always pass concrete timeout
+            ))
+            self._active_tasks.add(task)
+            task.add_done_callback(self._active_tasks.discard)
+            tasks.append(task)
+            
+        # Execute all tasks concurrently
+        async with log_context_span("subprocess_execution", {"num_calls": len(calls)}):
+            return await asyncio.gather(*tasks)
+
+    async def stream_run(
+        self,
+        calls: List[ToolCall],
+        timeout: Optional[float] = None,
+    ) -> AsyncIterator[ToolResult]:
+        """
+        Execute tool calls and yield results as they become available.
+        
+        Args:
+            calls: List of tool calls to execute
+            timeout: Optional timeout for each execution
+            
+        Yields:
+            Tool results as they complete (not necessarily in order)
+        """
+        if not calls:
+            return
+            
+        if self._shutting_down:
+            # Yield error results if shutting down
+            for call in calls:
+                yield ToolResult(
+                    tool=call.tool,
+                    result=None,
+                    error="System is shutting down",
+                    start_time=datetime.now(timezone.utc),
+                    end_time=datetime.now(timezone.utc),
+                    machine=os.uname().nodename,
+                    pid=os.getpid(),
+                )
+            return
+        
+        # Use default_timeout if no timeout specified
+        effective_timeout = timeout if timeout is not None else self.default_timeout
+            
+        # Create a queue for results
+        queue = asyncio.Queue()
+        
+        # Start all executions and have them put results in the queue
+        pending = set()
+        for call in calls:
+            task = asyncio.create_task(self._execute_to_queue(
+                call, queue, effective_timeout  # Always pass concrete timeout
+            ))
+            self._active_tasks.add(task)
+            task.add_done_callback(self._active_tasks.discard)
+            pending.add(task)
+            
+        # Yield results as they become available
+        while pending:
+            # Get next result from queue
+            result = await queue.get()
+            yield result
+            
+            # Check for completed tasks
+            done, pending = await asyncio.wait(
+                pending, timeout=0, return_when=asyncio.FIRST_COMPLETED
+            )
+            
+            # Handle any exceptions
+            for task in done:
+                try:
+                    await task
+                except Exception as e:
+                    logger.exception("Error in task: %s", e)
+
+    async def _execute_to_queue(
+        self,
+        call: ToolCall,
+        queue: asyncio.Queue,
+        timeout: float,  # Make timeout required
+    ) -> None:
+        """Execute a single call and put the result in the queue."""
+        result = await self._execute_single_call(call, timeout)
+        await queue.put(result)
+
+    async def _execute_single_call(
+        self,
+        call: ToolCall,
+        timeout: float,  # Make timeout required
+    ) -> ToolResult:
+        """
+        FIXED: Execute a single tool call with proper tool preparation and serialization.
+        
+        Args:
+            call: Tool call to execute
+            timeout: Timeout in seconds (required)
+            
+        Returns:
+            Tool execution result
+        """
+        start_time = datetime.now(timezone.utc)
+        
+        logger.debug("Executing %s in subprocess with %ss timeout", call.tool, timeout)
+        
+        try:
+            # Ensure pool is initialized
+            await self._ensure_pool()
+            
+            # Get tool from registry
+            tool_impl = await self.registry.get_tool(call.tool, call.namespace)
+            if tool_impl is None:
+                return ToolResult(
+                    tool=call.tool,
+                    result=None,
+                    error=f"Tool '{call.tool}' not found",
+                    start_time=start_time,
+                    end_time=datetime.now(timezone.utc),
+                    machine=os.uname().nodename,
+                    pid=os.getpid(),
+                )
+            
+            # FIXED: Ensure tool is properly prepared before serialization
+            if inspect.isclass(tool_impl):
+                tool = tool_impl()
+            else:
+                tool = tool_impl
+                
+            # FIXED: Ensure tool_name attribute exists
+            if not hasattr(tool, 'tool_name'):
+                tool.tool_name = call.tool
+            elif not tool.tool_name:
+                tool.tool_name = call.tool
+                
+            # FIXED: Also set _tool_name class attribute for consistency
+            if not hasattr(tool.__class__, '_tool_name'):
+                tool.__class__._tool_name = call.tool
+            
+            # FIXED: Serialize the properly prepared tool
+            try:
+                serialized_tool_data = pickle.dumps(tool)
+                logger.debug("Successfully serialized %s (%d bytes)", call.tool, len(serialized_tool_data))
+            except Exception as e:
+                logger.error("Failed to serialize tool %s: %s", call.tool, e)
+                return ToolResult(
+                    tool=call.tool,
+                    result=None,
+                    error=f"Tool serialization failed: {str(e)}",
+                    start_time=start_time,
+                    end_time=datetime.now(timezone.utc),
+                    machine=os.uname().nodename,
+                    pid=os.getpid(),
+                )
+            
+            # Execute in subprocess using the FIXED worker
+            loop = asyncio.get_running_loop()
+            safety_timeout = timeout + 5.0
+            
+            try:
+                result_data = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        self._process_pool,
+                        functools.partial(
+                            _serialized_tool_worker,  # Use the FIXED worker function
+                            call.tool,
+                            call.namespace,
+                            call.arguments,
+                            timeout,
+                            serialized_tool_data  # Pass serialized tool data
+                        )
+                    ),
+                    timeout=safety_timeout
+                )
+                
+                # Parse timestamps
+                if isinstance(result_data["start_time"], str):
+                    result_data["start_time"] = datetime.fromisoformat(result_data["start_time"])
+                    
+                if isinstance(result_data["end_time"], str):
+                    result_data["end_time"] = datetime.fromisoformat(result_data["end_time"])
+                
+                end_time = datetime.now(timezone.utc)
+                actual_duration = (end_time - start_time).total_seconds()
+                
+                if result_data.get("error"):
+                    logger.debug("%s subprocess failed after %.3fs: %s", 
+                               call.tool, actual_duration, result_data["error"])
+                else:
+                    logger.debug("%s subprocess completed in %.3fs (limit: %ss)", 
+                               call.tool, actual_duration, timeout)
+                
+                # Create ToolResult from worker data
+                return ToolResult(
+                    tool=result_data.get("tool", call.tool),
+                    result=result_data.get("result"),
+                    error=result_data.get("error"),
+                    start_time=result_data.get("start_time", start_time),
+                    end_time=result_data.get("end_time", end_time),
+                    machine=result_data.get("machine", os.uname().nodename),
+                    pid=result_data.get("pid", os.getpid()),
+                )
+                
+            except asyncio.TimeoutError:
+                end_time = datetime.now(timezone.utc)
+                actual_duration = (end_time - start_time).total_seconds()
+                logger.debug("%s subprocess timed out after %.3fs (safety limit: %ss)", 
+                           call.tool, actual_duration, safety_timeout)
+                
+                return ToolResult(
+                    tool=call.tool,
+                    result=None,
+                    error=f"Worker process timed out after {safety_timeout}s",
+                    start_time=start_time,
+                    end_time=end_time,
+                    machine=os.uname().nodename,
+                    pid=os.getpid(),
+                )
+                
+            except concurrent.futures.process.BrokenProcessPool:
+                logger.error("Process pool broke during execution - recreating")
+                if self._process_pool:
+                    self._process_pool.shutdown(wait=False)
+                    self._process_pool = None
+                    
+                return ToolResult(
+                    tool=call.tool,
+                    result=None,
+                    error="Worker process crashed",
+                    start_time=start_time,
+                    end_time=datetime.now(timezone.utc),
+                    machine=os.uname().nodename,
+                    pid=os.getpid(),
+                )
+                
+        except asyncio.CancelledError:
+            logger.debug("%s subprocess was cancelled", call.tool)
+            return ToolResult(
+                tool=call.tool,
+                result=None,
+                error="Execution was cancelled",
+                start_time=start_time,
+                end_time=datetime.now(timezone.utc),
+                machine=os.uname().nodename,
+                pid=os.getpid(),
+            )
+            
+        except Exception as e:
+            logger.exception("Error executing %s in subprocess: %s", call.tool, e)
+            end_time = datetime.now(timezone.utc)
+            actual_duration = (end_time - start_time).total_seconds()
+            logger.debug("%s subprocess setup failed after %.3fs: %s", 
+                       call.tool, actual_duration, e)
+            
+            return ToolResult(
+                tool=call.tool,
+                result=None,
+                error=f"Error: {str(e)}",
+                start_time=start_time,
+                end_time=end_time,
+                machine=os.uname().nodename,
+                pid=os.getpid(),
+            )
+
+    @property
+    def supports_streaming(self) -> bool:
+        """Check if this strategy supports streaming execution."""
+        return True
+        
+    async def _signal_handler(self, sig: int) -> None:
+        """Handle termination signals."""
+        signame = signal.Signals(sig).name
+        logger.info("Received %s, shutting down process pool", signame)
+        await self.shutdown()
+        
+    async def shutdown(self) -> None:
+        """Enhanced shutdown with graceful task handling and proper null checks."""
+        if self._shutting_down:
+            return
+            
+        self._shutting_down = True
+        self._shutdown_event.set()
+        
+        # Handle active tasks gracefully
+        active_tasks = list(self._active_tasks)
+        if active_tasks:
+            logger.debug(f"Completing {len(active_tasks)} active operations")
+            
+            # Cancel tasks with brief intervals for clean handling
+            for task in active_tasks:
+                try:
+                    if not task.done():
+                        task.cancel()
+                except Exception:
+                    pass
+                # Small delay to prevent overwhelming the event loop
+                try:
+                    await asyncio.sleep(0.001)
+                except Exception:
+                    pass
+            
+            # Allow reasonable time for completion
+            try:
+                completion_task = asyncio.create_task(
+                    asyncio.gather(*active_tasks, return_exceptions=True)
+                )
+                await asyncio.wait_for(completion_task, timeout=2.0)
+            except asyncio.TimeoutError:
+                logger.debug("Active operations completed within timeout constraints")
+            except Exception:
+                logger.debug("Active operations completed successfully")
+        
+        # FIXED: Handle process pool shutdown with proper null checks
+        if self._process_pool is not None:
+            logger.debug("Finalizing process pool")
+            try:
+                # Store reference and null check before async operation
+                pool_to_shutdown = self._process_pool
+                self._process_pool = None  # Clear immediately to prevent race conditions
+                
+                # Create shutdown task with the stored reference
+                shutdown_task = asyncio.create_task(
+                    asyncio.get_event_loop().run_in_executor(
+                        None, lambda: pool_to_shutdown.shutdown(wait=False) if pool_to_shutdown else None
+                    )
+                )
+                
+                try:
+                    await asyncio.wait_for(shutdown_task, timeout=1.0)
+                    logger.debug("Process pool shutdown completed")
+                except asyncio.TimeoutError:
+                    logger.debug("Process pool shutdown timed out, forcing cleanup")
+                    if not shutdown_task.done():
+                        shutdown_task.cancel()
+                except Exception as e:
+                    logger.debug(f"Process pool shutdown completed with warning: {e}")
+            except Exception as e:
+                logger.debug(f"Process pool finalization completed: {e}")
+        else:
+            logger.debug("Process pool already cleaned up")

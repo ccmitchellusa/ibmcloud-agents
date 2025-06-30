@@ -1,172 +1,198 @@
 # a2a_server/tasks/handlers/chuk/chuk_agent_handler.py
 """
-Task handler that delegates processing to a ChukAgent instance.
-"""
-import importlib
-import logging
-from typing import AsyncGenerator, Optional, List, Dict, Any
+ChukAgent Handler - Specialized wrapper around ResilientHandler for ChukAgents with session sharing support.
 
-# a2a imports
-from a2a_server.tasks.task_handler import TaskHandler
-from a2a_json_rpc.spec import (
-    Message, TaskStatus, TaskState, TaskStatusUpdateEvent, 
-    TaskArtifactUpdateEvent, Artifact, TextPart
-)
+This provides ChukAgent-optimized defaults while maintaining backward compatibility.
+"""
+import logging
+from typing import Optional
+
+from a2a_server.tasks.handlers.resilient_handler import ResilientHandler
 
 logger = logging.getLogger(__name__)
 
-class AgentHandler(TaskHandler):
+
+class ChukAgentHandler(ResilientHandler):
     """
-    Task handler that delegates processing to a ChukAgent instance defined in the YAML.
+    ChukAgent Handler with ChukAgent-optimized resilience settings and session sharing support.
     
-    This handler loads the agent specified in the YAML configuration
-    and delegates tasks to it.
+    This is a thin wrapper around ResilientHandler with settings optimized
+    for ChukAgents that typically use tools and may have MCP connections.
     """
     
-    def __init__(self, agent=None, name="chuk_chef", **kwargs):
-        """
-        Initialize the agent handler.
-        
-        Args:
-            agent: ChukAgent instance or string path to the agent module (from YAML config)
-            name: Name of the handler (from YAML config)
-            **kwargs: Additional arguments from YAML config
-        """
-        super().__init__()  # Initialize the parent TaskHandler
-        self.agent = None
-        self._name = name
-        
-        if agent:
-            # Check if agent is already an object (instance)
-            if hasattr(agent, 'process_message'):
-                self.agent = agent
-                logger.info(f"Using provided agent instance")
-            else:
-                # Otherwise, treat it as a string import path
-                try:
-                    module_path, _, attr = agent.rpartition('.')
-                    module = importlib.import_module(module_path)
-                    self.agent = getattr(module, attr)
-                    logger.info(f"Loaded agent from {agent}")
-                except (ImportError, AttributeError) as e:
-                    logger.error(f"Failed to load agent from {agent}: {e}")
-                    # Don't set self.agent to None here - it's already None
-    
-    @property
-    def name(self) -> str:
-        """Get the handler name."""
-        return self._name
-    
-    @property
-    def supported_content_types(self) -> List[str]:
-        """Get supported content types."""
-        return ["text/plain", "multipart/mixed"]
-    
-    async def process_task(
+    def __init__(
         self, 
-        task_id: str, 
-        message: Message, 
-        session_id: Optional[str] = None,
+        agent=None, 
+        name: Optional[str] = None,
+        circuit_breaker_threshold: int = 2,  # ChukAgents fail fast for tool issues
+        circuit_breaker_timeout: float = 60.0,  # Quick recovery for tools
+        task_timeout: float = 180.0,  # 3 minutes for complex tool operations
+        max_retry_attempts: int = 1,  # Don't over-retry tool operations
+        recovery_check_interval: float = 120.0,  # Check every 2 minutes
+        sandbox_id: Optional[str] = None,  # Session sandbox ID
+        # NEW: Session sharing configuration
+        session_sharing: Optional[bool] = None,  # Enable/disable cross-agent session sharing
+        shared_sandbox_group: Optional[str] = None,  # Shared sandbox group for cross-agent sessions
         **kwargs
-    ) -> AsyncGenerator:
+    ):
         """
-        Process a task by delegating to the agent.
+        Initialize ChukAgent handler with optimized settings and session sharing support.
         
         Args:
-            task_id: Unique identifier for the task
-            message: The message to process
-            session_id: Optional session identifier for maintaining conversation context
-            **kwargs: Additional arguments that might be passed by the framework
+            agent: ChukAgent instance or import path or factory function
+            name: Handler name (auto-detected if None)
+            circuit_breaker_threshold: Failures before circuit opens (default: 2)
+            circuit_breaker_timeout: Circuit open time (default: 60s)
+            task_timeout: Max time per task (default: 180s)
+            max_retry_attempts: Max retries (default: 1)
+            recovery_check_interval: Recovery check frequency (default: 120s)
+            sandbox_id: Session sandbox ID for isolated sessions
+            session_sharing: Enable cross-agent session sharing (default: None = auto-detect)
+            shared_sandbox_group: Shared sandbox group name for cross-agent sessions
+            **kwargs: Additional arguments (including agent factory parameters)
+        """
         
-        Yields:
-            Task status and artifact updates from the agent
+        # 🔧 NEW: Handle agent factory function with parameters
+        processed_agent = self._process_agent_with_params(agent, kwargs)
+        
+        # Extract handler-specific parameters and remove agent factory parameters
+        handler_kwargs = self._extract_handler_params(kwargs)
+        
+        # *** KEY FIX: Explicit session sharing detection ***
+        if shared_sandbox_group and session_sharing is None:
+            # Auto-enable session sharing when shared_sandbox_group is provided
+            session_sharing = True
+            logger.info(f"Auto-enabling session sharing for shared_sandbox_group: {shared_sandbox_group}")
+        
+        # *** KEY FIX: Pass session sharing parameters to parent ***
+        super().__init__(
+            agent=processed_agent,  # Use the processed agent (with parameters applied)
+            name=name or "chuk_agent",
+            circuit_breaker_threshold=circuit_breaker_threshold,
+            circuit_breaker_timeout=circuit_breaker_timeout,
+            task_timeout=task_timeout,
+            max_retry_attempts=max_retry_attempts,
+            recovery_check_interval=recovery_check_interval,
+            sandbox_id=sandbox_id,
+            session_sharing=session_sharing,
+            shared_sandbox_group=shared_sandbox_group,
+            **handler_kwargs  # Only pass handler-specific parameters
+        )
+        
+        # Log session sharing configuration
+        if self.session_sharing:
+            logger.info(f"Initialized ChukAgentHandler '{self._name}' with SHARED sessions (group: {self.shared_sandbox_group})")
+        else:
+            logger.info(f"Initialized ChukAgentHandler '{self._name}' with ISOLATED sessions (sandbox: {self.sandbox_id})")
+
+    def _process_agent_with_params(self, agent, kwargs):
         """
-        if self.agent is None:
-            logger.error("No agent configured")
-            # Fixed: Remove the message parameter since it's not allowed
-            yield TaskStatusUpdateEvent(
-                id=task_id,
-                status=TaskStatus(state=TaskState.failed),
-                final=True
-            )
-            # Add an artifact with the error details instead
-            yield TaskArtifactUpdateEvent(
-                id=task_id,
-                artifact=Artifact(
-                    name="error",
-                    parts=[TextPart(type="text", text="No agent configured")],
-                    index=0
-                )
-            )
-            return
-            
-        # Delegate processing to the agent
-        try:
-            async for event in self.agent.process_message(task_id, message, session_id):
-                yield event
-        except Exception as e:
-            logger.error(f"Error in agent processing: {e}")
-            # Fixed: Remove the message parameter since it's not allowed
-            yield TaskStatusUpdateEvent(
-                id=task_id,
-                status=TaskStatus(state=TaskState.failed),
-                final=True
-            )
-            # Add an artifact with the error details instead
-            yield TaskArtifactUpdateEvent(
-                id=task_id,
-                artifact=Artifact(
-                    name="error",
-                    parts=[TextPart(type="text", text=f"Agent error: {str(e)}")],
-                    index=0
-                )
-            )
-    
-    async def cancel_task(self, task_id: str) -> bool:
-        """
-        Attempt to cancel a running task.
+        Process the agent parameter, handling factory functions with parameters.
         
         Args:
-            task_id: The task ID to cancel
+            agent: Agent instance, import path, or factory function
+            kwargs: All configuration parameters from YAML
             
         Returns:
-            Always False (not supported)
+            Processed agent instance
         """
-        logger.debug(f"Cancellation request for task {task_id} - not supported")
-        return False
-    
-    async def get_conversation_history(self, session_id: Optional[str] = None) -> List[Dict[str, str]]:
-        """
-        Get conversation history for a session.
-        
-        Args:
-            session_id: The session ID
+        # If agent is callable (factory function), call it with appropriate parameters
+        if callable(agent):
+            agent_params = self._extract_agent_params(kwargs)
+            logger.info(f"🔧 Calling agent factory with parameters: {list(agent_params.keys())}")
+            logger.debug(f"🔧 Agent factory parameters: {agent_params}")
             
-        Returns:
-            Conversation history from the agent if available, otherwise empty list
-        """
-        if self.agent and hasattr(self.agent, 'get_conversation_history'):
             try:
-                return await self.agent.get_conversation_history(session_id)
+                processed_agent = agent(**agent_params)
+                logger.info(f"✅ Successfully created agent via factory function")
+                return processed_agent
             except Exception as e:
-                logger.error(f"Error getting conversation history: {e}")
-                return []
-        return []
-    
-    async def get_token_usage(self, session_id: Optional[str] = None) -> Dict[str, Any]:
+                logger.error(f"❌ Failed to create agent via factory function: {e}")
+                raise
+        else:
+            # Agent is already an instance or import path, use as-is
+            logger.info(f"🔧 Using agent directly (not a factory function)")
+            return agent
+
+    def _extract_agent_params(self, kwargs):
         """
-        Get token usage statistics for a session.
+        Extract parameters that should be passed to the agent factory function.
         
         Args:
-            session_id: The session ID
+            kwargs: All configuration parameters from YAML
             
         Returns:
-            Token usage statistics from the agent if available, otherwise empty stats
+            Dictionary of parameters for agent factory
         """
-        if self.agent and hasattr(self.agent, 'get_token_usage'):
-            try:
-                return await self.agent.get_token_usage(session_id)
-            except Exception as e:
-                logger.error(f"Error getting token usage: {e}")
-                return {"total_tokens": 0, "total_cost": 0}
-        return {"total_tokens": 0, "total_cost": 0}
+        # Define which parameters should be passed to the agent factory
+        agent_param_keys = {
+            # Session management parameters
+            'enable_sessions',
+            'infinite_context', 
+            'token_threshold',
+            'max_turns_per_segment',
+            'session_ttl_hours',
+            
+            # Model parameters
+            'provider',
+            'model',
+            'streaming',
+            
+            # Tool parameters
+            'enable_tools',
+            'debug_tools',
+            
+            # MCP parameters
+            'mcp_transport',
+            'mcp_config_file',
+            'mcp_servers',
+            'mcp_sse_servers',
+            'tool_namespace',
+            'max_concurrency',
+            'tool_timeout',
+            
+            # Other agent-specific parameters
+            'description',
+            'instruction',
+            'use_system_prompt_generator',
+        }
+        
+        # Extract only the parameters that should go to the agent factory
+        agent_params = {k: v for k, v in kwargs.items() if k in agent_param_keys}
+        
+        logger.debug(f"🔧 Extracted {len(agent_params)} agent parameters from {len(kwargs)} total kwargs")
+        return agent_params
+
+    def _extract_handler_params(self, kwargs):
+        """
+        Extract parameters that should be passed to the handler (not agent factory).
+        
+        Args:
+            kwargs: All configuration parameters from YAML
+            
+        Returns:
+            Dictionary of parameters for handler
+        """
+        # Define which parameters are for the agent factory (to exclude)
+        agent_param_keys = {
+            'enable_sessions', 'infinite_context', 'token_threshold', 'max_turns_per_segment',
+            'session_ttl_hours', 'provider', 'model', 'streaming', 'enable_tools', 'debug_tools',
+            'mcp_transport', 'mcp_config_file', 'mcp_servers', 'mcp_sse_servers', 'tool_namespace',
+            'max_concurrency', 'tool_timeout', 'description', 'instruction', 'use_system_prompt_generator'
+        }
+        
+        # Return only non-agent parameters
+        handler_params = {k: v for k, v in kwargs.items() if k not in agent_param_keys}
+        
+        logger.debug(f"🔧 Extracted {len(handler_params)} handler parameters from {len(kwargs)} total kwargs")
+        return handler_params
+
+
+# Backward compatibility alias
+class AgentHandler(ChukAgentHandler):
+    """Alias for ChukAgentHandler to maintain backward compatibility."""
+    pass
+
+
+# Export classes
+__all__ = ["ChukAgentHandler", "AgentHandler"]

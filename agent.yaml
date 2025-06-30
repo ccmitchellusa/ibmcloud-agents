@@ -63,7 +63,7 @@ handlers:
       defaultOutputModes:
         - "text/plain"
       skills:
-        - id: ibmcloud_platform_engineering
+        - id: ibmcloud_code_engine
           name: IBM Cloud Code Engine
           description: "Manages IBM Cloud Code Engine resources, including projects, jobs, applications, and environments."
           tags:
@@ -75,3 +75,49 @@ handlers:
             - "List all serverless projects."
             - "List the applications."
             - "Build and deploy an application named 'myapp' in project 'myproj. Use the github repository 'myrepo' and set the default port to 4000. Use the smallest CPU and mempory configuration available, and make sure one instance is always running."
+        - id: ibmcloud_code_engine_monitoring
+          name: IBM Cloud Code Engine monitoring
+          description: "[FUTURE]: Monitors IBM Cloud Code Engine applications for issues and sends push notifications when problems are found."
+          tags:
+            - ibmcloud
+            - serverless
+            - codeengine
+            - monitoring
+          examples:
+            - "Monitor all applications and notify me when there are problems."
+            - "Set the monitoring interval to 10 minutes."
+  ibmcloud_guide_agent:
+    type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
+    agent: ibmcloud_guide_agent.agent.root_agent
+    name: ibmcloud_guide_agent
+    agent_card:
+      name: IBM Cloud Guide
+      description: "Your Guide that can assist with questions about IBM Cloud"
+      #url: "https://ibmcloudbaseagent.example.com"
+      version: "0.1.0"
+      documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/README.md"
+      provider:
+        organization: "ccmitchellusa"
+        url: "https://www.linkedin.com/in/chris-mitchell-ibm/"
+      capabilities:
+        streaming: true
+        pushNotifications: false
+      authentication:
+        schemes:
+          - "None"
+      defaultInputModes:
+        - "text/plain"
+      defaultOutputModes:
+        - "text/plain"
+      skills:
+        - id: ibmcloud_assist
+          name: IBM Cloud Assist
+          description: "Expertise in questions about IBM Cloud and IBM Cloud catalog services."
+          tags:
+            - ibmcloud
+            - platform-engineering
+            - assist
+          examples:
+            - "What are best practices for setting up an enterprise account structure for a large organization?"
+            - "Tell me how deployable architectures work."
+            - "How can I create custom terraform based automation that I can share within my organization through private catalogs?"

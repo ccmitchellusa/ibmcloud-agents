@@ -1,293 +1,266 @@
-# File: a2a_server/tasks/session_aware_task_handler.py
+# File: a2a_server/tasks/handlers/session_aware_task_handler.py
 from __future__ import annotations
-
-import asyncio
 import logging
 from typing import Dict, List, Optional, Any
 
-from a2a_server.tasks.task_handler import TaskHandler
+from chuk_ai_session_manager import SessionManager as AISessionManager
 
-# Try to import session manager components
-try:
-    from chuk_session_manager.models.event_source import EventSource
-    from chuk_session_manager.models.event_type import EventType  # noqa: F401  # (kept for future use)
-    from chuk_session_manager.models.session import Session, SessionEvent  # noqa: F401  # (kept for future use)
-    from chuk_session_manager.storage import SessionStoreProvider
-    from chuk_session_manager.infinite_conversation import (
-        InfiniteConversationManager,
-        SummarizationStrategy,
-    )
-
-    SESSIONS_AVAILABLE = True
-except ImportError:
-    # When chuk‑session‑manager is not installed we fall back to light mocks so
-    # that the rest of the code (and unit‑tests) can still import this module.
-    SESSIONS_AVAILABLE = False
-
-    class EventSource:  # type: ignore
-        USER = "USER"
-        LLM = "LLM"
-
-    class SummarizationStrategy:  # type: ignore
-        KEY_POINTS = "key_points"
-        BASIC = "basic"
-        QUERY_FOCUSED = "query_focused"
-        TOPIC_BASED = "topic_based"
+from a2a_server.tasks.handlers.task_handler import TaskHandler
+from a2a_server.utils.session_setup import SessionSetup, setup_handler_sessions
+from a2a_server.session_store_factory import (
+    create_shared_ai_session_manager,
+    create_isolated_ai_session_manager,
+    validate_session_setup
+)
 
 logger = logging.getLogger(__name__)
 
 
 class SessionAwareTaskHandler(TaskHandler):
-    """Base‑class for task‑handlers that need conversation/session support."""
+    """
+    Base class for task handlers that support session management with proper external storage.
+    
+    This implementation relies entirely on external CHUK session storage for cross-server
+    and cross-agent session sharing. No in-memory session caching is used.
+    """
 
     def __init__(
         self,
         name: str,
-        session_store=None,
+        sandbox_id: Optional[str] = None,
+        infinite_context: bool = True,
         token_threshold: int = 4000,
-        summarization_strategy: str | "SummarizationStrategy" = "key_points",
+        max_turns_per_segment: int = 50,
+        default_ttl_hours: int = 24,
+        session_store=None,
+        # Session sharing configuration
+        session_sharing: Optional[bool] = None,  # None = auto-detect, True = enable, False = disable
+        shared_sandbox_group: Optional[str] = None,  # Override sandbox for sharing purposes
+        **ai_session_kwargs
     ) -> None:
-        if not SESSIONS_AVAILABLE:
-            raise ImportError("chuk‑session‑manager is required for SessionAwareTaskHandler")
-
-        self._name: str = name
-        # Mapping of A2A session‑ids (external) -> agent session‑ids (internal)
-        self._session_map: Dict[str, str] = {}
-
-        # Allow dependency‑injected session stores (test doubles, etc.)
-        if session_store is not None:
-            SessionStoreProvider.set_store(session_store)
-
-        # ------------------------------------------------------------------
-        # Determine which summarisation strategy to pass to the
-        # InfiniteConversationManager.  In production the real
-        # ``SummarizationStrategy`` behaves like an ``enum.Enum`` *and* is
-        # callable.  In the unit‑tests it is replaced by a very thin mock
-        # class whose constructor **takes no arguments** - attempting to call
-        # it therefore raises *TypeError*.
-        # ------------------------------------------------------------------
-        raw_strategy: Any = (
-            summarization_strategy.lower()
-            if isinstance(summarization_strategy, str)
-            else summarization_strategy
-        )
-
-        try:
-            strategy = SummarizationStrategy(raw_strategy)  # type: ignore[arg-type]
-        except (ValueError, AttributeError, TypeError):
-            # ─ ValueError ──────────── unknown value for the real enum
-            # ─ AttributeError ──────── the fallback mock has no ``__call__``
-            # ─ TypeError ───────────── the mock *is* a class but its ctor
-            #                           takes no args (this is what the tests
-            #                           hit).
-            strategy = raw_strategy  # forward the string directly.
-
-        # Create the conversation‑manager that actually keeps track of tokens,
-        # summaries, etc.
-        self._conversation_manager = InfiniteConversationManager(
+        self._name = name
+        
+        # Determine session sharing strategy
+        self.session_sharing = self._determine_session_sharing(session_sharing, shared_sandbox_group)
+        
+        # Use shared sandbox group if session sharing is enabled, otherwise use handler-specific sandbox
+        effective_sandbox = shared_sandbox_group if self.session_sharing else sandbox_id
+        
+        # Use common session setup utility
+        self.sandbox_id, self.session_config = setup_handler_sessions(
+            handler_name=name,
+            sandbox_id=effective_sandbox,
+            default_ttl_hours=default_ttl_hours,
+            infinite_context=infinite_context,
             token_threshold=token_threshold,
-            summarization_strategy=strategy,
+            max_turns_per_segment=max_turns_per_segment,
+            **ai_session_kwargs
         )
+        
+        # Store shared sandbox group for cross-agent sharing
+        self.shared_sandbox_group = shared_sandbox_group or self.sandbox_id
+        
+        if self.session_sharing:
+            logger.info("Session support enabled for handler '%s' with SHARED external sessions (group: %s)", 
+                       name, self.shared_sandbox_group)
+        else:
+            logger.info("Session support enabled for handler '%s' with ISOLATED external sessions (sandbox: %s)", 
+                       name, self.sandbox_id)
 
-        logger.info("Initialized %s with session support", name)
+    def _determine_session_sharing(self, session_sharing: Optional[bool], shared_sandbox_group: Optional[str]) -> bool:
+        """
+        Determine whether to enable session sharing based on configuration.
+        
+        Args:
+            session_sharing: Explicit session sharing setting
+            shared_sandbox_group: Shared sandbox group override
+            
+        Returns:
+            True if session sharing should be enabled
+        """
+        # Explicit configuration takes precedence
+        if session_sharing is not None:
+            return session_sharing
+        
+        # If shared_sandbox_group is specified, enable sharing
+        if shared_sandbox_group is not None:
+            return True
+        
+        # Default: no sharing (safer default)
+        return False
 
-    # ---------------------------------------------------------------------
-    # Public helpers (the unit‑tests exercise these extensively)
-    # ---------------------------------------------------------------------
     @property
-    def name(self) -> str:  # noqa: D401
+    def name(self) -> str:
         """Return the registered name of this handler."""
-
         return self._name
 
-    # ------------------------------------------------------------------
-    # Session‑mapping helpers
-    # ------------------------------------------------------------------
-    def _get_agent_session_id(self, a2a_session_id: Optional[str]) -> Optional[str]:
-        """Return the *agent* session‑id for a given external *A2A* id.
-
-        Creates a new agent session (via :pyclass:`~Session.create`) on‑demand
-        and caches the mapping.  All exceptions are caught and logged - the
-        function returns *None* in error situations so that the caller can
-        degrade gracefully rather than exploding inside tests.
+    async def _get_ai_session_manager(self, a2a_session_id: Optional[str]) -> AISessionManager:
         """
-
-        if not a2a_session_id:
-            return None
-
-        # Fast path - already known.
-        if a2a_session_id in self._session_map:
-            return self._session_map[a2a_session_id]
-
-        # ------------------------------------------------------------------
-        # Need to create a *new* agent session.  ``Session.create`` is async -
-        # here we need to bridge the sync/async boundary.  In production this
-        # should ideally be re‑structured so that we never block the running
-        # event‑loop, but for now we reproduce the original behaviour and add
-        # robust error‑handling.
-        # ------------------------------------------------------------------
-        try:
-            loop = None
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                # "There is no current event loop in thread …" - fine.
-                pass
-
-            if loop and loop.is_running():
-                # We *are* inside a running loop - use ``ensure_future`` and
-                # ``run_until_complete`` on a *new* loop to avoid dead‑locks.
-                # This path is only taken in unit‑tests where an outer loop
-                # might already be active.
-                future = Session.create()
-                agent_session = loop.run_until_complete(future)  # type: ignore[arg-type]
-            else:
-                # No loop or not running yet - safe to just *run* the coroutine.
-                agent_session = asyncio.run(Session.create())
-
-            agent_session_id = agent_session.id  # type: ignore[attr-defined]
-            self._session_map[a2a_session_id] = agent_session_id
-            logger.debug(
-                "Created new agent session %s for external session %s",
-                agent_session_id,
-                a2a_session_id,
-            )
-            return agent_session_id
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("Failed to create an agent session for %s", a2a_session_id)
-            return None
-
-    # ------------------------------------------------------------------
-    # Conversation helpers (thin wrappers around InfiniteConversationManager)
-    # ------------------------------------------------------------------
-    async def add_to_session(self, agent_session_id: str, text: str, is_agent: bool = False) -> bool:  # noqa: D401
-        """Add a message to the session.
+        Get AI session manager that connects to external storage.
         
-        Args:
-            agent_session_id: Internal agent session ID
-            text: Message text content
-            is_agent: Whether this message is from the agent (True) or user (False)
-            
-        Returns:
-            Success flag
+        IMPORTANT: This creates a NEW manager instance each time that connects to
+        the external storage. This ensures proper cross-server session sharing.
         """
-        source = EventSource.LLM if is_agent else EventSource.USER
-        try:
-            await self._conversation_manager.process_message(
-                agent_session_id,
-                text,
-                source,
-                self._llm_call,  # callback the manager can use for live summaries
+        if not a2a_session_id:
+            # Create ephemeral session manager for one-off requests
+            return SessionSetup.create_ai_session_manager(self.session_config)
+        
+        if self.session_sharing:
+            # Create shared AI session manager - connects to shared external storage
+            return create_shared_ai_session_manager(
+                sandbox_id=self.shared_sandbox_group,
+                session_id=a2a_session_id,
+                session_config=self.session_config
             )
-            logger.debug("Added %s message to session %s", source, agent_session_id)
+        else:
+            # Create isolated session manager - connects to isolated external storage
+            return create_isolated_ai_session_manager(
+                sandbox_id=self.sandbox_id,
+                session_id=a2a_session_id,
+                session_config=self.session_config
+            )
+
+    async def add_user_message(self, session_id: Optional[str], message: str) -> bool:
+        """Add user message to external session storage."""
+        try:
+            ai_session = await self._get_ai_session_manager(session_id)
+            await ai_session.user_says(message)
+            
+            log_prefix = "📝🌐" if self.session_sharing else "📝🔒"
+            logger.debug(f"{log_prefix} Added user message to external session {session_id}")
             return True
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("Failed to add message to session %s", agent_session_id)
+        except Exception:
+            logger.exception("Failed to add user message to session %s", session_id)
             return False
 
-    async def get_context(self, agent_session_id: str) -> Optional[List[Dict[str, Any]]]:
-        """Get conversation context for an agent session.
-        
-        Args:
-            agent_session_id: Internal agent session ID
-            
-        Returns:
-            List of messages in ChatML format, or None on error
-        """
+    async def add_ai_response(
+        self, 
+        session_id: Optional[str], 
+        response: str,
+        model: str = "unknown",
+        provider: str = "unknown"
+    ) -> bool:
+        """Add AI response to external session storage."""
         try:
-            context = await self._conversation_manager.build_context_for_llm(agent_session_id)
-            logger.debug(
-                "Retrieved %d messages of context for session %s",
-                len(context) if context else 0,
-                agent_session_id,
-            )
-            return context
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("Failed to build context for session %s", agent_session_id)
-            return None
-
-    # ------------------------------------------------------------------
-    # Callback stub - must be implemented by concrete subclasses
-    # ------------------------------------------------------------------
-    async def _llm_call(self, messages: List[Dict[str, Any]], model: str = "default") -> str:  # noqa: D401
-        """LLM callback used for summarization.
-        
-        Args:
-            messages: List of messages in ChatML format
-            model: Model to use for the call
+            ai_session = await self._get_ai_session_manager(session_id)
+            await ai_session.ai_responds(response, model=model, provider=provider)
             
-        Returns:
-            LLM response text
-            
-        Raises:
-            NotImplementedError: Subclasses must implement this method
-        """
-        raise NotImplementedError("Sub‑classes must implement _llm_call() for summarisation support")
+            log_prefix = "📝🌐" if self.session_sharing else "📝🔒"
+            logger.debug(f"{log_prefix} Added AI response to external session {session_id}")
+            return True
+        except Exception:
+            logger.exception("Failed to add AI response to session %s", session_id)
+            return False
 
-    # ------------------------------------------------------------------
-    # Convenience wrappers requested by the tests
-    # ------------------------------------------------------------------
     async def get_conversation_history(self, session_id: Optional[str] = None) -> List[Dict[str, str]]:
-        """Get full conversation history for a session.
-        
-        Args:
-            session_id: External A2A session ID
-            
-        Returns:
-            List of messages in ChatML format
-        """
+        """Get full conversation history from external session storage."""
         if not session_id:
             return []
 
-        agent_session_id = self._session_map.get(session_id)
-        if not agent_session_id:
+        try:
+            ai_session = await self._get_ai_session_manager(session_id)
+            conversation = await ai_session.get_conversation()
+            
+            log_prefix = "🔍🌐" if self.session_sharing else "🔍🔒"
+            logger.debug(f"{log_prefix} Retrieved {len(conversation)} messages from external session {session_id}")
+            return conversation
+        except Exception:
+            logger.exception("Failed to get conversation history for %s", session_id)
             return []
 
-        try:
-            raw_history = await self._conversation_manager.get_full_conversation_history(agent_session_id)
-            return [
-                {"role": role, "content": content} for role, _source, content in raw_history
-            ]
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("Failed to fetch conversation history for %s", session_id)
-            return []
+    async def get_conversation_context(
+        self, 
+        session_id: Optional[str] = None,
+        max_messages: int = 10
+    ) -> List[Dict[str, str]]:
+        """Get recent conversation context from external session storage."""
+        history = await self.get_conversation_history(session_id)
+        context = history[-max_messages:] if history else []
+        
+        log_prefix = "🔍🌐" if self.session_sharing else "🔍🔒"
+        logger.debug(f"{log_prefix} Returning {len(context)} context messages from external storage for {self._name}")
+        return context
 
     async def get_token_usage(self, session_id: Optional[str] = None) -> Dict[str, Any]:
-        """Get token usage statistics for a session.
-        
-        Args:
-            session_id: External A2A session ID
-            
-        Returns:
-            Dictionary with token usage statistics
-        """
+        """Get token usage statistics from external session storage."""
         if not session_id:
-            return {"total_tokens": 0, "total_cost": 0}
-
-        agent_session_id = self._session_map.get(session_id)
-        if not agent_session_id:
-            return {"total_tokens": 0, "total_cost": 0}
+            return SessionSetup.get_default_token_usage_stats()
 
         try:
-            store = SessionStoreProvider.get_store()
-            session = await store.get(agent_session_id)
-            if not session:
-                return {"total_tokens": 0, "total_cost": 0}
+            ai_session = await self._get_ai_session_manager(session_id)
+            return SessionSetup.extract_session_stats(ai_session)
+        except Exception:
+            return SessionSetup.get_default_token_usage_stats()
 
-            by_model: Dict[str, Dict[str, Any]] = {}
-            for model, usage in session.token_summary.usage_by_model.items():  # type: ignore[attr-defined]
-                by_model[model] = {
-                    "prompt_tokens": usage.prompt_tokens,
-                    "completion_tokens": usage.completion_tokens,
-                    "total_tokens": usage.total_tokens,
-                    "cost_usd": usage.estimated_cost_usd,
-                }
+    async def get_session_chain(self, session_id: Optional[str] = None) -> List[str]:
+        """Get the session chain from external session storage."""
+        if not session_id:
+            return []
 
-            return {
-                "total_tokens": session.total_tokens,  # type: ignore[attr-defined]
-                "total_cost_usd": session.total_cost,  # type: ignore[attr-defined]
-                "by_model": by_model,
-            }
-        except Exception:  # pylint: disable=broad-except
-            logger.exception("Failed to obtain token usage for %s", session_id)
-            return {"total_tokens": 0, "total_cost": 0}
+        try:
+            ai_session = await self._get_ai_session_manager(session_id)
+            chain = await ai_session.get_session_chain()
+            return chain
+        except Exception:
+            logger.exception("Failed to get session chain for %s", session_id)
+            return []
+
+    async def cleanup_session(self, session_id: str) -> bool:
+        """
+        Clean up session resources from external storage.
+        
+        Note: External sessions are typically cleaned up via TTL in the storage system.
+        This method is mainly for compatibility and logging.
+        """
+        storage_type = "shared" if self.session_sharing else "isolated"
+        sandbox = self.shared_sandbox_group if self.session_sharing else self.sandbox_id
+        
+        logger.info(f"🗑️ Session cleanup requested for {storage_type} external session: {sandbox}/{session_id}")
+        
+        # External sessions are cleaned up via TTL, not manual cleanup
+        # The external storage system handles this automatically
+        return True
+
+    def get_session_stats(self) -> Dict[str, Any]:
+        """Get statistics about this handler's session configuration."""
+        return {
+            "handler_name": self.name,
+            "sandbox_id": self.sandbox_id,
+            "shared_sandbox_group": self.shared_sandbox_group,
+            "session_sharing": "enabled" if self.session_sharing else "disabled",
+            "session_storage": "external_chuk_sessions_only",
+            "cross_server_compatible": True,
+            "session_caching": "disabled_for_cross_server_compatibility",
+            "session_config": self.session_config
+        }
+
+    def validate_session_configuration(self) -> Dict[str, Any]:
+        """
+        Validate this handler's session configuration.
+        
+        Returns:
+            Validation results
+        """
+        validation = {
+            "handler_name": self.name,
+            "configuration_valid": True,
+            "issues": []
+        }
+        
+        # Check if session sharing configuration makes sense
+        if self.session_sharing and not self.shared_sandbox_group:
+            validation["configuration_valid"] = False
+            validation["issues"].append("Session sharing enabled but no shared_sandbox_group specified")
+        
+        if not self.session_sharing and self.shared_sandbox_group:
+            validation["issues"].append("shared_sandbox_group specified but session sharing disabled")
+        
+        # Validate session setup
+        try:
+            session_validation = validate_session_setup()
+            validation["session_setup"] = session_validation
+        except Exception as e:
+            validation["configuration_valid"] = False
+            validation["issues"].append(f"Session setup validation failed: {e}")
+        
+        return validation

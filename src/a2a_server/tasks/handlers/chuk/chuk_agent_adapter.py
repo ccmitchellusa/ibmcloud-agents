@@ -1,322 +1,185 @@
 # a2a_server/tasks/handlers/chuk/chuk_agent_adapter.py
 """
-ChukAgentAdapter: Adapts a ChukAgent to the interface expected by A2A handlers.
+Adapter that wraps ChukAgent to work with A2A TaskHandler interface.
 """
-import asyncio
-import json
 import logging
-from typing import Dict, List, Any, Optional, Union, AsyncGenerator
+from typing import AsyncGenerator, Optional, List, Dict, Any
 
-# a2a imports
+from a2a_server.tasks.handlers.task_handler import TaskHandler
+from a2a_server.tasks.handlers.chuk.chuk_agent import ChukAgent
 from a2a_json_rpc.spec import (
-    Message, TaskStatus, TaskState, Artifact, TextPart,
-    TaskStatusUpdateEvent, TaskArtifactUpdateEvent
+    Message, TaskStatus, TaskState, TaskStatusUpdateEvent, 
+    TaskArtifactUpdateEvent, Artifact, TextPart
 )
-
-# Local imports
-from .chuk_agent import ChukAgent
-from .conversation_manager import ConversationManager
 
 logger = logging.getLogger(__name__)
 
-class ChukAgentAdapter:
+
+class ChukAgentAdapter(TaskHandler):
     """
-    Adapts a ChukAgent to the interface expected by A2A handlers.
+    Adapter that wraps a ChukAgent to work with the A2A TaskHandler interface.
+    
+    This keeps the ChukAgent pure and framework-agnostic while allowing it
+    to work with the A2A task system.
     """
     
-    def __init__(
-        self, 
-        agent: ChukAgent, 
-        conversation_manager: Optional[ConversationManager] = None,
-        streaming: bool = True
-    ):
+    def __init__(self, agent: ChukAgent):
         """
-        Initialize adapter with an agent and optional conversation manager.
+        Initialize the adapter with a ChukAgent.
         
         Args:
             agent: The ChukAgent instance to adapt
-            conversation_manager: Optional conversation manager for session history
-            streaming: Whether to use streaming responses
         """
         self.agent = agent
-        self.conversation_manager = conversation_manager
-        self.streaming = streaming
         
-        # Override agent streaming setting if needed
-        if streaming != agent.streaming:
-            agent.streaming = streaming
-            
-        logger.info(f"Initialized ChukAgentAdapter for agent '{agent.name}'")
+    @property
+    def name(self) -> str:
+        """Get the agent name."""
+        return self.agent.name
     
-    def _extract_message_content(self, message: Message) -> Union[str, List[Dict[str, Any]]]:
-        """
-        Extract content from message parts, handling both text and multimodal inputs.
-        
-        Args:
-            message: The a2a message to extract content from
-            
-        Returns:
-            Either a string (for text-only messages) or a list of content parts
-        """
-        # Try to get message dump for extraction
-        try:
-            if hasattr(message, 'model_dump'):
-                message_dump = message.model_dump()
-                
-                # Check for content field directly
-                if hasattr(message, 'content'):
-                    return message.content
-                    
-                # Check for text field directly
-                if hasattr(message, 'text'):
-                    return message.text
-        except Exception:
-            pass
-        
-        # Fallback to parts extraction
+    @property
+    def supported_content_types(self) -> List[str]:
+        """Get supported content types."""
+        return ["text/plain", "multipart/mixed"]
+    
+    def _extract_message_content(self, message: Message) -> str:
+        """Extract text content from A2A message."""
         if not message.parts:
-            # Try direct string conversion as last resort
-            try:
-                content = str(message)
-                return content if content else "Empty message"
-            except:
-                return "Empty message"
+            return str(message) if message else "Empty message"
             
-        # Check if any non-text parts exist
-        has_non_text = any(part.type != "text" for part in message.parts if hasattr(part, "type"))
-        
-        if not has_non_text:
-            # Simple text case - concatenate all text parts
-            text_parts = []
-            for part in message.parts:
-                try:
-                    # Try multiple approaches to extract text
-                    if hasattr(part, "text") and part.text:
-                        text_parts.append(part.text)
-                    elif hasattr(part, "model_dump"):
-                        part_dict = part.model_dump()
-                        if "text" in part_dict and part_dict["text"]:
-                            text_parts.append(part_dict["text"])
-                    elif hasattr(part, "to_dict"):
-                        part_dict = part.to_dict()
-                        if "text" in part_dict and part_dict["text"]:
-                            text_parts.append(part_dict["text"])
-                    # Last resort - try __str__
-                    else:
-                        part_str = str(part)
-                        text_parts.append(part_str)
-                except Exception:
-                    pass
-                    
-            # Handle empty parts
-            if not text_parts:
-                # Try one more fallback using string representation
-                try:
-                    return str(message)
-                except:
-                    return "Empty message"
-                
-            return " ".join(text_parts)
-        
-        # Multimodal case - create a list of content parts
-        content_parts = []
-        
+        text_parts = []
         for part in message.parts:
             try:
-                part_data = part.model_dump(exclude_none=True) if hasattr(part, "model_dump") else {}
-                
-                if hasattr(part, "type") and part.type == "text":
-                    if hasattr(part, "text") and part.text:
-                        content_parts.append({
-                            "type": "text",
-                            "text": part.text
-                        })
-                    elif "text" in part_data:
-                        content_parts.append({
-                            "type": "text",
-                            "text": part_data["text"]
-                        })
-                elif hasattr(part, "type") and part.type == "image":
-                    if hasattr(part, "data") and part.data:
-                        content_parts.append({
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{part.data}"
-                            }
-                        })
-                    elif "data" in part_data:
-                        content_parts.append({
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{part_data['data']}"
-                            }
-                        })
+                if hasattr(part, "text") and part.text:
+                    text_parts.append(part.text)
+                elif hasattr(part, "model_dump"):
+                    part_dict = part.model_dump()
+                    if "text" in part_dict and part_dict["text"]:
+                        text_parts.append(part_dict["text"])
             except Exception:
                 pass
-        
-        # Fallback if no parts could be processed
-        if not content_parts:
-            try:
-                return str(message)
-            except:
-                return "Empty multimodal message"
                 
-        return content_parts
+        return " ".join(text_parts) if text_parts else str(message)
     
-    async def process_message(
+    async def process_task(
         self, 
         task_id: str, 
         message: Message, 
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
+        **kwargs
     ) -> AsyncGenerator:
         """
-        Process a message and generate responses.
+        Process a task by delegating to the ChukAgent.
         
         Args:
             task_id: Unique identifier for the task
-            message: Message to process
-            session_id: Optional session identifier for maintaining conversation context
+            message: The message to process
+            session_id: Optional session identifier
+            **kwargs: Additional arguments
         
         Yields:
             Task status and artifact updates
         """
-        # First yield a "working" status
+        # Yield working status
         yield TaskStatusUpdateEvent(
             id=task_id,
             status=TaskStatus(state=TaskState.working),
             final=False
         )
         
-        # Extract the user message content
-        raw_user_content = self._extract_message_content(message)
-        
-        # Convert to string if needed
-        if isinstance(raw_user_content, list):
-            user_content_str = json.dumps(raw_user_content)
-        else:
-            user_content_str = raw_user_content
-        
-        if not user_content_str or user_content_str.strip() == "" or user_content_str == "Empty message":
-            try:
-                if hasattr(message, 'parts') and message.parts:
-                    part_texts = []
-                    for part in message.parts:
-                        if hasattr(part, '_obj') and hasattr(part._obj, 'get'):
-                            text = part._obj.get('text')
-                            if text:
-                                part_texts.append(text)
-                    if part_texts:
-                        user_content_str = " ".join(part_texts)
-
-                if not user_content_str or user_content_str.strip() == "":
-                    if hasattr(message, '__dict__'):
-                        for attr_name, attr_value in message.__dict__.items():
-                            if isinstance(attr_value, str) and attr_value.strip():
-                                user_content_str = attr_value
-                                break
-
-                    if not user_content_str or user_content_str.strip() == "":
-                        user_content_str = str(message)
-            except Exception:
-                pass
-
-            if not user_content_str or user_content_str.strip() == "":
-                user_content_str = f"Message from user at {task_id[-8:]}"
-        
-        llm_messages = []
-        
-        if self.conversation_manager and session_id:
-            try:
-                await self.conversation_manager.add_message(
-                    session_id, 
-                    user_content_str, 
-                    is_agent=False
-                )
-                context = await self.conversation_manager.get_context(session_id)
-                if context:
-                    llm_messages = context
-                else:
-                    llm_messages = [{"role": "system", "content": self.agent.instruction}]
-            except Exception as e:
-                logger.error(f"Error using conversation manager: {e}")
-                llm_messages = [{"role": "system", "content": self.agent.instruction}]
-        else:
-            llm_messages = [{"role": "system", "content": self.agent.instruction}]
-        
-        if not llm_messages or llm_messages[-1].get("role") != "user":
-            llm_messages.append({"role": "user", "content": user_content_str})
-        
-        started_generating = False
-        full_response = ""
-
         try:
-            response_generator = await self.agent.generate_response(llm_messages)
-
-            if hasattr(response_generator, "__aiter__"):
-                # Streaming case
-                async for chunk in response_generator:
-                    delta = chunk.get("response", "")
-                    if delta:
-                        full_response += delta
-
-                        artifact = Artifact(
-                            name=f"{self.agent.name}_response",
-                            parts=[TextPart(type="text", text=delta if not started_generating else full_response)],
-                            index=0
-                        )
-
-                        started_generating = True
-                        yield TaskArtifactUpdateEvent(id=task_id, artifact=artifact)
-                        await asyncio.sleep(0.01)
-            else:
-                # Non-streaming response (e.g. from tool calls)
-                if isinstance(response_generator, dict):
-                    text_response = response_generator.get("response", "")
-                    if not text_response:
-                        if "tool_calls" in response_generator:
-                            text_response = "Tool executed but returned no direct response."
-                        else:
-                            text_response = str(response_generator)
-                else:
-                    text_response = str(response_generator)
-
-                full_response = text_response
-
-                yield TaskArtifactUpdateEvent(
-                    id=task_id,
-                    artifact=Artifact(
-                        name=f"{self.agent.name}_response",
-                        parts=[TextPart(type="text", text=text_response or "")],
-                        index=0
+            # Extract user message
+            user_content = self._extract_message_content(message)
+            
+            # Initialize tools
+            await self.agent.initialize_tools()
+            
+            # Get available tools for enhanced instruction
+            available_tools = await self.agent.get_available_tools()
+            
+            # Build enhanced instruction
+            enhanced_instruction = self.agent.get_system_prompt()
+            if available_tools:
+                enhanced_instruction += f"\n\nYou have access to these tools: {', '.join(available_tools)}. Use them when appropriate to provide accurate, up-to-date information."
+            
+            # Prepare messages
+            messages = [
+                {"role": "system", "content": enhanced_instruction},
+                {"role": "user", "content": user_content}
+            ]
+            
+            # Use agent's complete method
+            result = await self.agent.complete(messages, use_tools=True)
+            
+            # Emit tool artifacts if tools were used
+            if result["tool_calls"]:
+                for i, (tool_call, tool_result) in enumerate(zip(result["tool_calls"], result["tool_results"])):
+                    tool_artifact = Artifact(
+                        name=f"tool_call_{i}",
+                        parts=[TextPart(
+                            type="text",
+                            text=f"🔧 Tool: {tool_call.function.name}\n📥 Input: {tool_call.function.arguments}\n📤 Result: {tool_result.get('content', 'No result')}"
+                        )],
+                        index=i + 1
                     )
-                )
-
-            if self.conversation_manager and session_id and full_response:
-                await self.conversation_manager.add_message(
-                    session_id,
-                    full_response,
-                    is_agent=True
-                )
-
+                    yield TaskArtifactUpdateEvent(id=task_id, artifact=tool_artifact)
+            
+            # Emit final response
+            response_artifact = Artifact(
+                name=f"{self.agent.name}_response",
+                parts=[TextPart(type="text", text=result["content"] or "No response generated")],
+                index=0
+            )
+            yield TaskArtifactUpdateEvent(id=task_id, artifact=response_artifact)
+            
+            # Completion
             yield TaskStatusUpdateEvent(
                 id=task_id,
                 status=TaskStatus(state=TaskState.completed),
                 final=True
             )
-
+            
         except Exception as e:
-            logger.error(f"Error processing message: {e}")
+            logger.error(f"Error processing task: {e}")
+            
+            # Error artifact
+            error_artifact = Artifact(
+                name="error",
+                parts=[TextPart(type="text", text=f"Error: {str(e)}")],
+                index=0
+            )
+            yield TaskArtifactUpdateEvent(id=task_id, artifact=error_artifact)
+            
+            # Failed status
             yield TaskStatusUpdateEvent(
                 id=task_id,
                 status=TaskStatus(state=TaskState.failed),
                 final=True
             )
-            yield TaskArtifactUpdateEvent(
-                id=task_id,
-                artifact=Artifact(
-                    name=f"{self.agent.name}_error",
-                    parts=[TextPart(type="text", text=f"Error: {str(e)}")],
-                    index=0
-                )
-            )
+    
+    async def cancel_task(self, task_id: str) -> bool:
+        """Attempt to cancel a running task."""
+        logger.debug(f"Task cancellation not supported for {self.agent.name}")
+        return False
+    
+    async def get_conversation_history(self, session_id: Optional[str] = None) -> List[Dict[str, str]]:
+        """Get conversation history for a session."""
+        # ChukAgent doesn't implement session management by default
+        # This could be extended if needed
+        return []
+    
+    async def get_token_usage(self, session_id: Optional[str] = None) -> Dict[str, Any]:
+        """Get token usage statistics for a session."""
+        # ChukAgent doesn't implement usage tracking by default
+        # This could be extended if needed
+        return {
+            "total_tokens": 0,
+            "estimated_cost": 0,
+            "user_messages": 0,
+            "ai_messages": 0,
+            "session_segments": 0
+        }
 
+
+# Export the adapter
+__all__ = ["ChukAgentAdapter"]
