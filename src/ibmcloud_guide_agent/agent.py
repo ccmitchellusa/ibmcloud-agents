@@ -10,14 +10,25 @@ from chuk_llm.configuration import ProviderConfig
 
 logger = logging.getLogger(__name__)
 
-AGENT_PROVIDER = os.getenv("PROVIDER","openai")
-AGENT_MODEL = os.getenv("MODEL","gpt-4o-mini")
+# Extract session-related parameters with defaults
+enable_sessions =True
+enable_tools = True
+debug_tools = False
+infinite_context = True
+token_threshold = 4000
+max_turns_per_segment = 50
+session_ttl_hours = 24 # hours
+
+# Extract other configurable parameters
+provider = 'openai'
+model = 'gpt-4o-mini'
+streaming = True
 
 runtime_overlay = {
     "litellm": {
         "client": "chuk_llm.llm.providers.openai_client:OpenAILLMClient",
         "api_key_env": "LITELLM_PROXY_API_KEY",
-        "default_model": AGENT_MODEL,
+        "default_model": model,
         "api_base": os.getenv("LITELLM_PROXY_URL"),
     }
 }
@@ -27,7 +38,7 @@ provider_config = ProviderConfig(runtime_overlay)
 IBMCLOUD_MCP_TOOLS = "assist"
 
 # Create the configuration for the MCP server
-config_file = "ibmcloud_mcp_config.json"
+config_file = "ibmcloud_mcp_guide_config.json"
 config = {
     "mcpServers": {
         "ibmcloud": {
@@ -63,10 +74,20 @@ try:
         mcp_servers=["ibmcloud"],
         mcp_config_file=str(config_file),
         tool_namespace="tools",
-        provider=AGENT_PROVIDER,
-        model=AGENT_MODEL,
-#        config=provider_config,
-        streaming=True
+        provider=provider,
+        model=model,
+        streaming=streaming,
+        
+        # 🔧 CONFIGURABLE: Session management settings from YAML
+        enable_sessions=enable_sessions,
+        infinite_context=infinite_context,
+        token_threshold=token_threshold,
+        max_turns_per_segment=max_turns_per_segment,
+        session_ttl_hours=session_ttl_hours,
+        
+        # 🔧 CONFIGURABLE: Tool settings from YAML  
+        enable_tools=enable_tools,
+        debug_tools=debug_tools,
     )
     logger.info("IBM Cloud Guide agent created successfully with MCP tools")
    
@@ -85,8 +106,8 @@ In the meantime, I recommend checking:
 
 I apologize for the inconvenience!""",
 
-        provider=AGENT_PROVIDER,
-        model=AGENT_MODEL,
+        provider=provider,
+        model=model,
         mcp_transport="stdio",
         mcp_servers=[],  # No MCP servers for fallback
         namespace="stdio"

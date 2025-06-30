@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "ibmcloud": {
+      "command": "ibmcloud",
+      "args": [
+        "--mcp-transport",
+        "stdio",
+        "--mcp-allow-write",
+        "--mcp-tools",
+        "assist,target,resource_groups,iam_access,iam_api-key,iam_role,iam_audit-logs,account_user,account_audit-logs"
+      ]
+    }
+  }
+}

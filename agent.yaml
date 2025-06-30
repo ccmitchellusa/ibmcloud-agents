@@ -182,3 +182,68 @@ handlers:
             - 🗣️ Assign `email1,email2,...` to access group `ACCESS_GROUP_NAME`
             - 🗣️ Delete the service id,`SERVICE_ID`
             - 🗣️ Delete the access group, `ACCESS_GROUP` name
+  ibmcloud_cloud_automation_agent:
+    type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
+    agent: ibmcloud_cloud_automation_agent.agent.root_agent
+    name: ibmcloud_cloud_automation_agent
+    agent_card:
+      name: IBM Cloud Cloud Automation Agent
+      description: "Cloud Automation agent for IBM Cloud"
+      #url: "https://ibmcloudbaseagent.example.com"
+      version: "0.1.0"
+      documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-cloud-automation-agent/blob/main/README.md"
+      provider:
+        organization: "ccmitchellusa"
+        url: "https://www.linkedin.com/in/chris-mitchell-ibm/"
+      capabilities:
+        streaming: true
+        pushNotifications: false
+      authentication:
+        schemes:
+          - "None"
+      defaultInputModes:
+        - "text/plain"
+      defaultOutputModes:
+        - "text/plain"
+      skills:
+        - id: ibmcloud_deployable_architectures
+          name: IBM Cloud Deployable Architectures
+          description: "Deployable architecture patterns for IBM Cloud."
+          tags:
+            - ibmcloud
+            - deployable-architectures
+            - cloud-automation
+          examples:
+            - 🗣️ List all the deployable architectures in all catalogs
+            - 🗣️ Search all the catalogs for deployable architectures related to TOPIC
+            - 🗣️ Show me detailed deployment information for the ABC deployable architecture in the Community Registry catalog
+            - 🗣️ Show me the full list of available versions of ABC deployable architecture
+        - id: ibmcloud_projects
+          name: IBM Cloud Projects
+          description: "Manages deployment conrigurations of architectures."
+          tags:
+            - ibmcloud
+            - platform-engineering
+            - projects
+          examples:
+            - 🗣️ What projects are in this account?
+            - 🗣️ Create a new project, "`PROJECT_NAME`".
+            - 🗣️ List the environments in project, "`PROJECT_NAME`".
+            - 🗣️ Create new "dev", "test" and "prod" environments in `PROJECT_NAME`.
+            - 🗣️ List the configurations in project, "`PROJECT_NAME`".
+            - 🗣️ List the configuration version for the configuration, `CONFIG_ID`.
+            - 🗣️ Add a variable, "region" to each of the environments in `PROJECT_NAME`.`
+            - 🗣️ What input values still need to be specified before I can deploy configuration `CONFIG_ID`?
+            - 🗣️ Validate the `CONFIG_ID` configuration.
+            - 🗣️ View the validation logs for `CONFIG_ID`
+            - 🗣️ Deploy `CONFIG_ID`
+        - id: ibmcloud_schematics
+          name: IBM Cloud Schematics
+          description: "Work with IBM Cloud terraform and ansible deployment engine."
+          tags:
+            - ibmcloud
+            - platform-engineering
+            - schematics
+          examples:
+            - 🗣️ Find errors in the deployment logs for project PROJECT_NAME.
+            - 🗣️ What can I try to resolve these deployment errors?

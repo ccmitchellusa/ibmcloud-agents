@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ibmcloud": {
+      "command": "ibmcloud",
+      "args": [
+        "--mcp-transport",
+        "stdio",
+        "--mcp-tools",
+        "assist"
+      ]
+    }
+  }
+}
