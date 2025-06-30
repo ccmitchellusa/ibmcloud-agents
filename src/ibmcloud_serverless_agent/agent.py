@@ -66,7 +66,7 @@ If a current resource group has not been targetted, target the 'default' resourc
 IMPORTANT: Always use your tools to get real data. Never give generic responses!
 """,
         mcp_servers=["ibmcloud"],
-        mcp_config_file=str(config),
+        mcp_config_file=str(config_file),
         tool_namespace="tools",
         provider=AGENT_PROVIDER,
         model=AGENT_MODEL,
