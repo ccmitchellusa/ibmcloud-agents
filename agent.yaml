@@ -4,7 +4,7 @@ server:
 
 handlers:
   use_discovery: false
-  default: ibmcloud_base_agent
+  default: ibmcloud_account_admin_agent
 
   ibmcloud_base_agent:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
@@ -37,8 +37,8 @@ handlers:
             - ibmcloud
             - platform-engineering
           examples:
-            - "List all resource groups in my account."
-            - "List the service instances in my account."
+            - 🗣️ "List all resource groups in my account."
+            - 🗣️ "List the service instances in my account."
   ibmcloud_serverless_agent:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
     agent: ibmcloud_serverless_agent.agent.root_agent
@@ -84,8 +84,13 @@ handlers:
             - codeengine
             - monitoring
           examples:
-            - "Monitor all applications and notify me when there are problems."
-            - "Set the monitoring interval to 10 minutes."
+            - 🗣️ Show the apps in this project in table format
+            - 🗣️ What url can I test `APP_NAME` on?
+            - 🗣️ Which apps are having problems?
+            - 🗣️ What's wrong with `APP_NAME`?
+            - 🗣️ I have a containerized application in this github repo: GITHUB_REPO. Help me build and deploy it on code engine.
+            - 🗣️ "Monitor all applications and notify me when there are problems."
+            - 🗣️ "Set the monitoring interval to 10 minutes."
   ibmcloud_guide_agent:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
     agent: ibmcloud_guide_agent.agent.root_agent
@@ -118,6 +123,62 @@ handlers:
             - platform-engineering
             - assist
           examples:
-            - "What are best practices for setting up an enterprise account structure for a large organization?"
-            - "Tell me how deployable architectures work."
-            - "How can I create custom terraform based automation that I can share within my organization through private catalogs?"
+            - 🗣️ Assist me with `IBM_CLOUD_TOPIC`
+            - 🗣️ What are the different parts of a CRN?
+            - 🗣️ Target the `RESOURCE_GROUP_NAME` resource group            
+            - 🗣️ "Tell me how deployable architectures work."
+            - 🗣️ "How can I create custom terraform based automation that I can share within my organization through private catalogs?"
+  ibmcloud_account_admin_agent:
+    type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
+    agent: ibmcloud_account_admin_agent.agent.root_agent
+    name: ibmcloud_account_admin_agent
+    agent_card:
+      name: IBM Cloud Account Admin Agent
+      description: "Account Admin agent for IBM Cloud"
+      #url: "https://ibmcloudbaseagent.example.com"
+      version: "0.1.0"
+      documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-account-admin-agent/blob/main/README.md"
+      provider:
+        organization: "ccmitchellusa"
+        url: "https://www.linkedin.com/in/chris-mitchell-ibm/"
+      capabilities:
+        streaming: true
+        pushNotifications: false
+      authentication:
+        schemes:
+          - "None"
+      defaultInputModes:
+        - "text/plain"
+      defaultOutputModes:
+        - "text/plain"
+      skills:
+        - id: ibmcloud_account_administration
+          name: IBM Cloud Account Administration
+          description: "Account administration for IBM Cloud."
+          tags:
+            - ibmcloud
+            - platform-engineering
+            - account
+          examples:
+            - 🗣️ Invite `EMAIL` to this account
+            - 🗣️ Disable the user `EMAIL` in this account
+            - 🗣️ List the users in this account
+            - 🗣️ What other accounts do I have access to?
+        - id: ibmcloud_iam_administration
+          name: IBM IAM Administration
+          description: "IAM policies and api-key administration for users, services and trusted profiles."
+          tags:
+            - ibmcloud
+            - platform-engineering
+            - iam
+          examples:
+            - 🗣️ List the access groups in this account.
+            - 🗣️ Add `EMAIL` to `ACCESS_GROUP_NAME`
+            - 🗣️ Remove `EMAIL` from the `ACCESS_GROUP_NAME` access group
+            - 🗣️ Create a new api-key for accessing my services.
+            - 🗣️ Create a service id group, `name` that will be used for `purpose - Eg. Service Id's that represent Agents`.
+            - 🗣️ Create a service id for`SERVICE_ID` as part of the service id group `SERVICE_ID_GROUP_NAME`
+            - 🗣️ Create a new access group for `Reader|Writer|Manager|Viewer...` access to `SERVICE1,SERVICE2...`. Assign the `SERVICE_ID_NAME|SERVICE_ID_GROUP_NAME` to the access group.
+            - 🗣️ Assign `email1,email2,...` to access group `ACCESS_GROUP_NAME`
+            - 🗣️ Delete the service id,`SERVICE_ID`
+            - 🗣️ Delete the access group, `ACCESS_GROUP` name
