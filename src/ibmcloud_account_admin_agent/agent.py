@@ -38,7 +38,7 @@ provider_config = ProviderConfig(runtime_overlay)
 IBMCLOUD_MCP_TOOLS = "assist,target,resource_groups,iam_access,iam_api-key,iam_role,iam_audit-logs,account_user,account_audit-logs"
 
 # Create the configuration for the MCP server
-config_file = "ibmcloud_mcp_account_config.json"
+config_file = "ibmcloud_mcp_config.json"
 config = {
     "mcpServers": {
         "ibmcloud": {
@@ -46,7 +46,6 @@ config = {
             "args": [        
                 "--mcp-transport",
                 "stdio",
-                "--mcp-allow-write",
                 "--mcp-tools",
                 IBMCLOUD_MCP_TOOLS
             ]
@@ -59,7 +58,7 @@ config_path = Path(config_file)
 config_path.write_text(json.dumps(config, indent=2))
 
 try:
-    # IBM Cloud cloud automation agent
+    # IBM Cloud serverless computing agent
     root_agent = ChukAgent(
         name="ibmcloud_account_admin_agent",
         description="An IBM Cloud agent that help with account and IAM administrative tasks.",

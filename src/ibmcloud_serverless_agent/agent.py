@@ -10,24 +10,14 @@ from chuk_llm.configuration import ProviderConfig
 
 logger = logging.getLogger(__name__)
 
-# Extract session-related parameters with defaults
-enable_sessions =True
-enable_tools = True
-debug_tools = False
-infinite_context = True
-token_threshold = 4000
-max_turns_per_segment = 50
-session_ttl_hours = 24 # hours
+AGENT_PROVIDER = os.getenv("PROVIDER","openai")
+AGENT_MODEL = os.getenv("MODEL","gpt-4o-mini")
 
-# Extract other configurable parameters
-provider = 'openai'
-model = 'gpt-4o-mini'
-streaming = True
 runtime_overlay = {
     "litellm": {
         "client": "chuk_llm.llm.providers.openai_client:OpenAILLMClient",
         "api_key_env": "LITELLM_PROXY_API_KEY",
-        "default_model": model,
+        "default_model": AGENT_MODEL,
         "api_base": os.getenv("LITELLM_PROXY_URL"),
     }
 }
@@ -37,7 +27,7 @@ provider_config = ProviderConfig(runtime_overlay)
 IBMCLOUD_MCP_TOOLS = "target,resource_groups,code-engine_application_list,code-engine_project_select,code-engine_project_list,code-engine_project_get,code-engine_project_current,code-engine_application_get,code-engine_application_logs,code-engine_application_restart,code-engine_application_create,code-engine_build_list,code-engine-build_get,code-engine_application_events,code-engine_buildrun_logs,code-engine_buildrun_list,code-engine_buildrun_get"
 
 # Create the configuration for the MCP server
-config_file = "ibmcloud_mcp_serverless_config.json"
+config_file = "ibmcloud_mcp_config.json"
 config = {
     "mcpServers": {
         "ibmcloud": {
@@ -45,7 +35,6 @@ config = {
             "args": [        
                 "--mcp-transport",
                 "stdio",
-                "--mcp-allow-write",
                 "--mcp-tools",
                 IBMCLOUD_MCP_TOOLS
             ]
@@ -76,23 +65,13 @@ context that will be used in subsequent tool calls. Use the target tool to get t
 If a current resource group has not been targetted, target the 'default' resource group, then display the targets to the user.",
 IMPORTANT: Always use your tools to get real data. Never give generic responses!
 """,
-        provider=provider,
-        model=model,
         mcp_servers=["ibmcloud"],
         mcp_config_file=str(config_file),
         tool_namespace="tools",
-        streaming=streaming,
-        
-        # 🔧 CONFIGURABLE: Session management settings from YAML
-        enable_sessions=enable_sessions,
-        infinite_context=infinite_context,
-        token_threshold=token_threshold,
-        max_turns_per_segment=max_turns_per_segment,
-        session_ttl_hours=session_ttl_hours,
-        
-        # 🔧 CONFIGURABLE: Tool settings from YAML  
-        enable_tools=enable_tools,
-        debug_tools=debug_tools,
+        provider=AGENT_PROVIDER,
+        model=AGENT_MODEL,
+#        config=provider_config,
+        streaming=True
     )
     logger.info("IBM Cloud Serverless Computing agent created successfully with MCP tools")
     
@@ -111,8 +90,8 @@ In the meantime, I recommend checking:
 
 I apologize for the inconvenience!""",
 
-        provider=provider,
-        model=model,
+        provider=AGENT_PROVIDER,
+        model=AGENT_MODEL,
         mcp_transport="stdio",
         mcp_servers=[],  # No MCP servers for fallback
         namespace="stdio"

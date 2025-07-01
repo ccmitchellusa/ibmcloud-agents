@@ -247,3 +247,5 @@ handlers:
           examples:
             - 🗣️ Find errors in the deployment logs for project PROJECT_NAME.
             - 🗣️ What can I try to resolve these deployment errors?
+            - 🗣️ Delete the access group, `ACCESS_GROUP` name
+  
