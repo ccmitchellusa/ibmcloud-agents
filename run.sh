@@ -3,6 +3,28 @@
 # import env vars/secrets
 source .env
 
+# Function to display the IBM Cloud banner
+show_banner() {
+    # Define IBM Blue color (hex 0f62fe)
+    local IBM_BLUE='\033[38;2;15;98;254m'
+    local RESET='\033[0m'
+    
+    echo -e "${IBM_BLUE}"
+    echo "==============================================================================="
+    echo ""
+    echo "    ██╗██████╗ ███╗   ███╗     ██████╗██╗      ██████╗ ██╗   ██╗██████╗ "
+    echo "    ██║██╔══██╗████╗ ████║    ██╔════╝██║     ██╔═══██╗██║   ██║██╔══██╗"
+    echo "    ██║██████╔╝██╔████╔██║    ██║     ██║     ██║   ██║██║   ██║██║  ██║"
+    echo "    ██║██╔══██╗██║╚██╔╝██║    ██║     ██║     ██║   ██║██║   ██║██║  ██║"
+    echo "    ██║██████╔╝██║ ╚═╝ ██║    ╚██████╗███████╗╚██████╔╝╚██████╔╝██████╔╝"
+    echo "    ╚═╝╚═════╝ ╚═╝     ╚═╝     ╚═════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝ "
+    echo ""                  A2A Server w/ Platform Engineering Agents
+    echo "==============================================================================="
+    echo -e "${RESET}"
+}
+
+# Display the banner when script starts
+show_banner
 # Launches the agent(s) using the A2A Server framework
 #
 # Usage: A2A Server (YAML config) [-h] [-c CONFIG] [-p HANDLER_PACKAGES] [--no-discovery] [--log-level {debug,info,warning,error,critical}] [--list-routes] [--enable-flow-diagnosis]

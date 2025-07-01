@@ -31,7 +31,7 @@ handlers:
         - "text/plain"
       skills:
         - id: ibmcloud_platform_engineering
-          name: IBM Cloud Platform Engineering
+          name: 👨🏻‍⚕️🖥️ IBM Cloud Platform Engineering
           description: "Manages IBM Cloud resources"
           tags:
             - ibmcloud
@@ -64,7 +64,7 @@ handlers:
         - "text/plain"
       skills:
         - id: ibmcloud_code_engine
-          name: IBM Cloud Code Engine
+          name: ƛ IBM Cloud Code Engine
           description: "Manages IBM Cloud Code Engine resources, including projects, jobs, applications, and environments."
           tags:
             - ibmcloud
@@ -76,7 +76,7 @@ handlers:
             - "List the applications."
             - "Build and deploy an application named 'myapp' in project 'myproj. Use the github repository 'myrepo' and set the default port to 4000. Use the smallest CPU and mempory configuration available, and make sure one instance is always running."
         - id: ibmcloud_code_engine_monitoring
-          name: IBM Cloud Code Engine monitoring
+          name: 📊 IBM Cloud Code Engine monitoring
           description: "[FUTURE]: Monitors IBM Cloud Code Engine applications for issues and sends push notifications when problems are found."
           tags:
             - ibmcloud
@@ -116,7 +116,7 @@ handlers:
         - "text/plain"
       skills:
         - id: ibmcloud_assist
-          name: IBM Cloud Assist
+          name: 🤖 IBM Cloud Assist
           description: "Expertise in questions about IBM Cloud and IBM Cloud catalog services."
           tags:
             - ibmcloud
@@ -153,7 +153,7 @@ handlers:
         - "text/plain"
       skills:
         - id: ibmcloud_account_administration
-          name: IBM Cloud Account Administration
+          name: 👥 IBM Cloud Account Administration
           description: "Account administration for IBM Cloud."
           tags:
             - ibmcloud
@@ -165,8 +165,8 @@ handlers:
             - 🗣️ List the users in this account
             - 🗣️ What other accounts do I have access to?
         - id: ibmcloud_iam_administration
-          name: IBM IAM Administration
-          description: "IAM policies and api-key administration for users, services and trusted profiles."
+          name: 🔐 IBM IAM Administration
+          description: "Identity and Access Management (IAM) for access policies and api-key administration for users, services and trusted profiles."
           tags:
             - ibmcloud
             - platform-engineering
@@ -207,7 +207,7 @@ handlers:
         - "text/plain"
       skills:
         - id: ibmcloud_deployable_architectures
-          name: IBM Cloud Deployable Architectures
+          name: 📦 IBM Cloud Deployable Architectures
           description: "Deployable architecture patterns for IBM Cloud."
           tags:
             - ibmcloud
@@ -219,8 +219,8 @@ handlers:
             - 🗣️ Show me detailed deployment information for the ABC deployable architecture in the Community Registry catalog
             - 🗣️ Show me the full list of available versions of ABC deployable architecture
         - id: ibmcloud_projects
-          name: IBM Cloud Projects
-          description: "Manages deployment conrigurations of architectures."
+          name: 🗃️ IBM Cloud Projects
+          description: "Manages deployment configurations of architectures."
           tags:
             - ibmcloud
             - platform-engineering
@@ -238,7 +238,7 @@ handlers:
             - 🗣️ View the validation logs for `CONFIG_ID`
             - 🗣️ Deploy `CONFIG_ID`
         - id: ibmcloud_schematics
-          name: IBM Cloud Schematics
+          name: ⚙️ IBM Cloud Schematics
           description: "Work with IBM Cloud terraform and ansible deployment engine."
           tags:
             - ibmcloud

@@ -3,11 +3,10 @@ name = "ibmcloud-base-agent"
 version = "0.1.0"
 description = "IBMCloud Base Agent (A2A & MCP-compliant)"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
-    "a2a-server>=0.2",
-    "chuk-llm==0.1.8",
-    "chuk-mcp>=0.2.2",
+    "a2a-server>=0.4",
+    "chuk-llm>=0.8.1",
     "litellm>=1.67.0",
     "python-dotenv>=1.1.0",
 ]
@@ -145,3 +144,4 @@ ignore_unused = [
   "twine",
   "uvicorn"
 ]
+
