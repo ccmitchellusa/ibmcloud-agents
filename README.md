@@ -1,7 +1,6 @@
-# ☁️ IBM Cloud Base Agent 🤖 *(A2A compliant)* 
+# ☁️ IBM Cloud Agents 🤖 *(A2A compliant)* 
 
-**Lightweight** base AI agent for building IBM Cloud agents that have built-in access to IBM Cloud MCP tools.
-**Platform Engineering Agent examples** Example agents for Serverless computing Redhat Openshift & Kubernetes on IBM Cloud
+**Lightweight** Platform Engineering AI agent examples for IBM Cloud that have built-in access to IBM Cloud MCP tools.
 
 ## Features
 
@@ -9,10 +8,11 @@
 - **🪶Lightweight 🕵️A2A-compliant** protocol support via [a2a-server](https://github.com/chrishayuk/a2a-server)
 - **📦Runs on _any_ Container runtime**
 - **🧠BYOM** - Bring your own model (must support 🛠️tool calling)
+- **Base Agent** - A base agent to quickly create new IBM Cloud platform engineering agents.
 
 ## ❤️Simple
 
-The heart of this agent is found in `ibmcloud_base_agent/agent.py`, which has:
+The heart of the agents is found in `ibmcloud_base_agent/agent.py`, which has:
 
 - 🧠LLM connection - LiteLLM
 - 🛠️IBMCloud MCP Server tool configuration for basic IBM Cloud commands to set target context and listing resource groups.
