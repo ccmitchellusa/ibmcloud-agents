@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "ibmcloud": {
+      "command": "ibmcloud",
+      "args": [
+        "--mcp-transport",
+        "stdio",
+        "--mcp-allow-write",
+        "--mcp-tools",
+        "assist,resource_groups,target,catalog_da,project,schematics"
+      ]
+    }
+  }
+}
