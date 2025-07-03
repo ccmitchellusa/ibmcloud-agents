@@ -45,7 +45,7 @@ Start the agent server locally:
 ./run.sh
 ```
 
-Open browser on http://0.0.0.0:8000/agent-card.json to view card JSON. This verifies that the agents are running.
+Open browser on `http://localhost:8000/agent-card.json` to view card JSON. This verifies that the agents are running.
 
 ## Install an A2A Client
 
@@ -71,7 +71,7 @@ You can use the `/connect` command in `a2a-cli` to switch between the agents, vi
 To switch to the **Base agent** while running a2a-cli, type:
 
 ```bash
-/connect http://<host>:8000/ibmcloud_base_agent
+/connect http://localhost:8000/ibmcloud_base_agent
 ```
 
 The **Base agent**'s 📇agent card  should appear:
