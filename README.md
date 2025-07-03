@@ -24,7 +24,8 @@ This agent is the default agent that will appear when connecting to the server w
 ## 🗜️Installation & Setup
 
 1. Install [`uv`](https://docs.astral.sh/uv/)
-2. Clone the repository:
+2. Install [IBM Cloud MCP Server](https://github.com/IBM-Cloud/mcp) 👷🏻‍♂️🚧 (coming soon!)
+3. Clone the repository:
 
 ```bash
 git clone https://github.com/ccmitchellusa/ibmcloud-base-agent.git
