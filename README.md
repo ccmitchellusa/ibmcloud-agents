@@ -97,7 +97,7 @@ The guide agent is connected via MCP to an assistant that has been trained on al
 Try to ask a question, like:
 
 ```text 
-Assist me with IBMCLOUD_TOPIC`
+Assist me with IBMCLOUD_TOPIC
 ```
 Some example topics:
 
