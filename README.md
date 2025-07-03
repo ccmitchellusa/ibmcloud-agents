@@ -13,7 +13,7 @@
 
 ## ❤️ Keeping it simple
 
-The common core of the agents is found in [`ibmcloud_base_agent/agent.py`](/ibmcloud_base_agent/agent.py), which is a template for building other agents and has:
+The common core of the agents is found in [`ibmcloud_base_agent/agent.py`](ibmcloud_base_agent/agent.py), which is a template for building other agents and has:
 
 - 🧠Model connection - OpenAI, Anthropic, LiteLLM, etc.
 - 🛠️IBMCloud MCP Server tool configuration for basic IBM Cloud commands to set target context and listing resource groups.
