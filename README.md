@@ -86,7 +86,7 @@ The base agent has some basic resource management capabilities built-in, like:
 Now, while still running `a2a-cli`, switch to the **IBM Cloud Guide agent**:
 
 ```bash
-/connect http://<host>:8000/ibmcloud_serverless_agent
+/connect http://localhost:8000/ibmcloud_serverless_agent
 ```
 
 The **IBM Cloud Guide agent**'s 📇agent card will appear:
@@ -107,7 +107,7 @@ Some example topics:
 To switch to the **Serverless Computing agent** while running a2a-cli, type:
 
 ```bash
-/connect http://<host>:8000/ibmcloud_serverless_agent
+/connect http://local:8000/ibmcloud_serverless_agent
 ```
 
 The **Serverless Computing agent**'s 📇agent card will be displayed:
@@ -124,7 +124,7 @@ You will see various serverless computing tasks that the agent can assist you wi
 Next switch to the **Account Admin agent**:
 
 ```bash
-/connect http://<host>:8000/ibmcloud_account_admin_agent
+/connect http://localhost:8000/ibmcloud_account_admin_agent
 ```
 
 ![Account Admin's Agent Card](docs/images/account_admin_agent_card.png)
@@ -142,7 +142,7 @@ You will see various management tasks for working with IBM Cloud accounts, users
 To switch back to the Base agent, type 
 
 ```bash
-/connect http://<host>:8000/ibmcloud_base_agent
+/connect http://localhost:8000/ibmcloud_base_agent
 ```
 
 ## 🕵🏼‍♂️ Serverless Computing Agent Example
