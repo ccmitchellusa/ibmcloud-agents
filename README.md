@@ -4,7 +4,7 @@
 
 ## Features
 
-- **🛠️ MCP-compliant IBM Cloud tools**: A subset of IBM Cloud tools that can be used by each agent. The integrated [chuk-mcp](https://github.com/chrishayuk/chuk-mcp) library provides multi-server, production quality MCP implementation that is blazing FAST.  
+- **🛠️ MCP-compliant IBM Cloud tools**: Each agent can easily be configured with its own list of IBM Cloud tools that it will use. The integrated [chuk-mcp](https://github.com/chrishayuk/chuk-mcp) library provides multi-server, production quality MCP implementation that is blazing FAST.  
 - **Add MCP servers as needed** For agents that require additional tools (MCP servers), you can include them in the Containerfile as a build layer and within the agent configure them alongside the IBM Cloud MCP Server.
 - **🪶Lightweight 🕵️ A2A-compliant**: A2A Protocol support is provided via [a2a-server](https://github.com/chrishayuk/a2a-server). Each agent is exposed on A2A endpoints with agent cards that can be easily configured (YAML).
 - **📦 Runs on _any_ Container runtime**: Agent containers can be deployed on any container runtime, including Podman, Rancher, Docker™️,  Kubernetes, IBM Cloud Code Engine (serverless), or RedHat™️ OpenShift.
