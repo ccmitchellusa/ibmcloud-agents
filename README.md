@@ -44,7 +44,7 @@ To run the example, you will need api keys for:
 1. OpenAI or other LLM provider (Anthropic, Gemini, Watsonx, etc.) - The demos are preconfigured for OpenAI models (gpt-4o-mini). See [chuk-llm](https://github.com/chrishayuk/chuk-llm) for other supported model providers.
 2. IBM Cloud - For a quick start demo, you should create a an account to use for testing purposes.  The agents will all be sharing your user API key which will need broad access to many areas.  NOTE: This is NOT recommended for production environements, in production, you will want to setup service id's and access groups to have tight control over what your agents can do within your account!
 
-Next, create a .env file with the above keys in the root of the ibmcloud-agents folder:
+Next, create a `.env` file with the above keys in the root of the ibmcloud-agents folder:
 
 ```bash
 OPENAI_API_KEY=your_key_goes_here
