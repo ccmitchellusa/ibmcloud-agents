@@ -74,7 +74,7 @@ RUN chmod +x /app/start.sh && \
     /venv/bin/pip3 install /tmp/*.whl && \
     rm -rf /tmp/*.whl
 
-RUN curl -L "https://download.clis.test.cloud.ibm.com/ibm-cloud-cli/${IBMCLOUD_VERSION}/IBM_Cloud_CLI_${IBMCLOUD_VERSION}_${IBMCLOUD_ARCH}.tar.gz" -o /tmp/ibmcloud.tar.gz && \
+RUN curl -L "https://download.clis.cloud.ibm.com/ibm-cloud-cli/${IBMCLOUD_VERSION}/IBM_Cloud_CLI_${IBMCLOUD_VERSION}_${IBMCLOUD_ARCH}.tar.gz" -o /tmp/ibmcloud.tar.gz && \
     tar -xf /tmp/ibmcloud.tar.gz -C /tmp && \
     mv /tmp/Bluemix_CLI/bin/ibmcloud /usr/local/bin/ && \
     rm -rf /tmp/ibmcloud.tar.gz /tmp/Bluemix_CLI && \
