@@ -248,4 +248,34 @@ handlers:
             - 🗣️ Find errors in the deployment logs for project PROJECT_NAME.
             - 🗣️ What can I try to resolve these deployment errors?
             - 🗣️ Delete the access group, `ACCESS_GROUP` name
-  
+#  supervisor_agent:
+#    type: a2a_server.tasks.handlers.adk.google_adk_handler.GoogleADKHandler
+#    agent: supervisor_agent.root_agent
+#    name: supervisor_agent
+#    agent_card:
+#      name: Supervisor Agent
+#      description: "Supervisor agent that collaborates with and delegates to multiple remote A2A agents"
+#      version: "0.1.0"
+#      documentationUrl: "https://github.com/ccmitchellusa/supervisor-agent/blob/main/README.md"
+#      provider:
+#        organization: "IBM"
+#        url: "https://www.ibm.com"
+#      capabilities:
+#        streaming: true
+#        pushNotifications: false
+#      authentication:
+#        schemes:
+#          - "None"
+#      defaultInputModes:
+#        - "text/plain"
+#      defaultOutputModes:
+#        - "text/plain"
+#      skills:
+#        - id: delegator
+#          name: Delegator
+#          description: "Connects to and delegates tasks to multiple remote A2A agents"
+#          tags:
+#            - agent
+#            - delegation
+#          examples:
+#            - "List all agents"

@@ -26,7 +26,7 @@ provider_config = ProviderConfig(runtime_overlay)
 IBMCLOUD_MCP_TOOLS = os.getenv("IBMCLOUD_MCP_TOOLS")
 
 # Create the configuration for the MCP server
-config_file = "ibmcloud_mcp_config.json"
+config_file = "ibmcloud_mcp_base_agent_config.json"
 config = {
     "mcpServers": {
         "ibmcloud": {

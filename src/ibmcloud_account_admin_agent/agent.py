@@ -38,7 +38,7 @@ provider_config = ProviderConfig(runtime_overlay)
 IBMCLOUD_MCP_TOOLS = "assist,target,resource_groups,iam_access,iam_api-key,iam_role,iam_audit-logs,account_user,account_audit-logs"
 
 # Create the configuration for the MCP server
-config_file = "ibmcloud_mcp_config.json"
+config_file = "ibmcloud_mcp_account_admin_config.json"
 config = {
     "mcpServers": {
         "ibmcloud": {
