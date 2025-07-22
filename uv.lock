@@ -1152,7 +1152,7 @@ wheels = [
 ]
 
 [[package]]
-name = "ibmcloud-base-agent"
+name = "ibmcloud-agents"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

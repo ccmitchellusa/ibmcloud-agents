@@ -1,7 +1,7 @@
 [project]
-name = "ibmcloud-base-agent"
+name = "ibmcloud-agents"
 version = "0.1.0"
-description = "IBMCloud Base Agent (A2A & MCP-compliant)"
+description = "IBMCloud Agents (A2A & MCP-compliant)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -17,8 +17,8 @@ dependencies = [
 #]
 
 # Convenience meta-extras
-#all = ["ibmcloud_base_agent"]
-#dev-all = ["ibmcloud_base_agent[dev]"]
+#all = ["ibmcloud_agents"]
+#dev-all = ["ibmcloud_agents[dev]"]
 
 # --------------------------------------------------------------------
 #  Authors and URLs
@@ -28,11 +28,11 @@ name = "Christopher C Mitchell"
 email = "redacted@ibm.com"
 
 [project.urls]
-Homepage = "https://github.com/ccmitchellusa/ibmcloud-base-agent"
-Documentation = "https://github.com/ccmitchellusa/ibmcloud-base-agent"
-Repository = "https://github.com/ccmitchellusa/ibmcloud-base-agent"
-"Bug Tracker" = "https://github.com/ccmitchellusa/ibmcloud-base-agent/issues"
-Changelog = "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/ccmitchellusa/ibmcloud-agents"
+Documentation = "https://github.com/ccmitchellusa/ibmcloud-agents"
+Repository = "https://github.com/ccmitchellusa/ibmcloud-agents"
+"Bug Tracker" = "https://github.com/ccmitchellusa/ibmcloud-agents/issues"
+Changelog = "https://github.com/ccmitchellusa/ibmcloud-agents/blob/main/CHANGELOG.md"
 
 # --------------------------------------------------------------------
 #  🔧 setuptools-specific configuration
@@ -40,9 +40,9 @@ Changelog = "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/CHAN
 [tool.setuptools]
 include-package-data = true          # ensure wheels include the data files
 
-# Automatic discovery: keep every package that starts with "mcpgateway"
+# Automatic discovery: keep every package that starts with "ibmcloud-agents"
 [tool.setuptools.packages.find]
-include = ["ibmcloud-base-agent*"]
+include = ["ibmcloud-agents*"]
 exclude = ["tests*"]
 
 ##  Runtime data files  ------------------------------------------------
@@ -58,7 +58,7 @@ exclude = ["tests*"]
 # --------------------------------------------------------------------
 [tool.pytype]
 # Directory-specific options:
-inputs = ["ibmcloud-base-agent"]
+inputs = ["src/ibmcloud*"]
 python_version = "3.11"          # match default runtime
 
 [tool.check-manifest]
@@ -89,7 +89,7 @@ warn_unreachable = true
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --cov=ibmcloud-base-agent"
+addopts = "-ra -q --cov=ibmcloud-agents"
 testpaths = [ "tests",]
 asyncio_mode = "auto"
 

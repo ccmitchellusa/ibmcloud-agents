@@ -1,8 +1,8 @@
 # =============== Builder Stage ===============
 FROM registry.access.redhat.com/ubi9-minimal:9.6-1747218906 AS builder
 LABEL maintainer="Ryan Edgell" \
-      name="ibm/ibmcloud-base-agent-build" \
-      description="Builder stage for IBM Cloud Base Agent" \
+      name="ibm/ibmcloud-agents-build" \
+      description="Builder stage for IBM Cloud Agents" \
       version="0.1.0"
 
 # Build arguments
@@ -42,8 +42,8 @@ RUN rm -rf /app/.venv && \
 # =============== Final Runtime Stage ===============
 FROM registry.access.redhat.com/ubi9-minimal:9.6-1747218906
 LABEL maintainer="Ryan Edgell" \
-      name="ibm/ibmcloud-base-agent" \
-      description="IBM Cloud Base Agent for automated cloud operations" \
+      name="ibm/ibmcloud-agents" \
+      description="IBM Cloud Agents for platform engineering" \
       version="0.1.0"
 
 # Build arguments

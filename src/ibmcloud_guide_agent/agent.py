@@ -76,7 +76,7 @@ except Exception as e:
     
     # Fallback agent with clear error message
     root_agent = ChukAgent(
-        name="ibmcloud_base_agent",
+        name="ibmcloud_guide_agent",
         description="An expert Guide that can assist with any questions about IBM Cloud.",
         instruction="""I'm the IBM Cloud Guide agent, but my IBM Cloud connection is currently unavailable.
 
