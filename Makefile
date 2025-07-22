@@ -11,7 +11,7 @@
 #
 # ──────────────────────────────────────────────────────────────────────────
 # Project variables
-PROJECT_NAME      = ibmcloud-base-agent
+PROJECT_NAME      = ibmcloud-agents
 DOCS_DIR          = docs
 HANDSDOWN_PARAMS  = -o $(DOCS_DIR)/ -n $(PROJECT_NAME) --name "IBMCloud Base Agent" --cleanup
 
@@ -1185,7 +1185,7 @@ ibmcloud-tag:
 ibmcloud-push:
 	@echo "📤 Logging into IBM Container Registry and pushing image…"
 	@ibmcloud cr login
-	podman push $(IBMCLOUD_IMAGE_NAME)
+	podman push $(IBMCLOUD_IMAGE_NAME) --creds iamapikey:$(IBMCLOUD_API_KEY)  
 
 ibmcloud-deploy:
 	@echo "🚀 Deploying image to Code Engine as '$(IBMCLOUD_CODE_ENGINE_APP)' using registry secret $(IBMCLOUD_REGISTRY_SECRET)…"

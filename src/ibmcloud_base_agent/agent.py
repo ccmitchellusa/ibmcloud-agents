@@ -44,10 +44,11 @@ config = {
 # Write config to a file
 config_path = Path(config_file)
 config_path.write_text(json.dumps(config, indent=2))
+root_agent = None
 
 # IBM Cloud base agent with native MCP integration
 try:
-    # Weather agent with native MCP integration
+    # Agent with native MCP integration
     root_agent = ChukAgent(
         name="ibmcloud_base_agent",
         description="An IBM Cloud platform engineering base agent that can do basic IBM Cloud resource management.",
