@@ -42,7 +42,8 @@ include-package-data = true          # ensure wheels include the data files
 
 # Automatic discovery: keep every package that starts with "ibmcloud-agents"
 [tool.setuptools.packages.find]
-include = ["ibmcloud-agents*"]
+where = ["src"]
+include = ["ibmcloud*", "supervisor_agent", "common"]
 exclude = ["tests*"]
 
 ##  Runtime data files  ------------------------------------------------
@@ -58,8 +59,8 @@ exclude = ["tests*"]
 # --------------------------------------------------------------------
 [tool.pytype]
 # Directory-specific options:
-inputs = ["src/ibmcloud*"]
-python_version = "3.11"          # match default runtime
+inputs = ["src/ibmcloud*", "src/supervisor_agent", "src/common"]
+python_version = "3.12"          # match default runtime
 
 [tool.check-manifest]
 ignore = [
