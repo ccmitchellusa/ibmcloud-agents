@@ -1,5 +1,6 @@
 # agent.yaml
 server:
+  host: 0.0.0.0
   port: 8000
 
 handlers:
@@ -10,10 +11,33 @@ handlers:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
     agent: ibmcloud_base_agent.agent.root_agent
     name: ibmcloud_base_agent
+
+    # Handler-level session configuration
+    sandbox_id: "base_agent_sessions"
+    session_sharing: false
+    
+    # Agent-level session configuration
+    enable_sessions: false  # Keep simple for utility agent
+    infinite_context: true
+    token_threshold: 4000
+    max_turns_per_segment: 50
+    session_ttl_hours: 24
+    
+    # Model configuration
+    provider: "openai"
+    model: "gpt-4o-mini"
+    streaming: true
+    
+    # MCP Tool configuration - START DISABLED, CAN ENABLE LATER
+    enable_tools: true  # Set to true when MCP server is available
+    debug_tools: false
+    mcp_config_file: "configs/ibmcloud_mcp_base_agent_config.json"
+    mcp_servers: ["ibmcloud-resource-mgmt"]
+
     agent_card:
-      name: IBM Cloud Base Agent
+      name: IBM Cloud Base Agent ☁️
       description: "Base agent for building IBM Cloud agents"
-      #url: "https://ibmcloudbaseagent.example.com"
+      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_base_agent"
       version: "0.1.0"
       documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/README.md"
       provider:
@@ -30,12 +54,13 @@ handlers:
       defaultOutputModes:
         - "text/plain"
       skills:
-        - id: ibmcloud_platform_engineering
-          name: 👨🏻‍⚕️🖥️ IBM Cloud Platform Engineering
-          description: "Manages IBM Cloud resources"
+        - id: ibmcloud_resource_management
+          name: 👨🏻‍⚕️🖥️ IBM Cloud Resource Management
+          description: "General-purpose IBM Cloud resource management"
           tags:
             - ibmcloud
             - platform-engineering
+            - resource-management
           examples:
             - 🗣️ "List all resource groups in my account."
             - 🗣️ "List the service instances in my account."
@@ -43,10 +68,33 @@ handlers:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
     agent: ibmcloud_serverless_agent.agent.root_agent
     name: ibmcloud_serverless_agent
+
+    # Handler-level session configuration
+    sandbox_id: "serverless_agent_sessions"
+    session_sharing: false
+    
+    # Agent-level session configuration
+    enable_sessions: false  # Keep simple for utility agent
+    infinite_context: true
+    token_threshold: 4000
+    max_turns_per_segment: 50
+    session_ttl_hours: 24
+    
+    # Model configuration
+    provider: "openai"
+    model: "gpt-4o-mini"
+    streaming: true
+    
+    # MCP Tool configuration - START DISABLED, CAN ENABLE LATER
+    enable_tools: true  # Set to true when MCP server is available
+    debug_tools: false
+    mcp_config_file: "configs/ibmcloud_serverless_agent_config.json"
+    mcp_servers: ["ibmcloud-serverless"]
+
     agent_card:
       name: IBM Cloud Serverless Agent
       description: "Serverless computing agent for IBM Cloud"
-      #url: "https://ibmcloudbaseagent.example.com"
+      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_serverless_agent"
       version: "0.1.0"
       documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/README.md"
       provider:
@@ -95,10 +143,33 @@ handlers:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
     agent: ibmcloud_guide_agent.agent.root_agent
     name: ibmcloud_guide_agent
+
+    # Handler-level session configuration
+    sandbox_id: "guide_agent_sessions"
+    session_sharing: false
+    
+    # Agent-level session configuration
+    enable_sessions: false  # Keep simple for utility agent
+    infinite_context: true
+    token_threshold: 4000
+    max_turns_per_segment: 50
+    session_ttl_hours: 24
+    
+    # Model configuration
+    provider: "openai"
+    model: "gpt-4o-mini"
+    streaming: true
+    
+    # MCP Tool configuration - START DISABLED, CAN ENABLE LATER
+    enable_tools: true  # Set to true when MCP server is available
+    debug_tools: false
+    mcp_config_file: "configs/ibmcloud_guide_agent_config.json"
+    mcp_servers: ["ibmcloud-guide"]
+
     agent_card:
-      name: IBM Cloud Guide
+      name: IBM Cloud Guide 🦮
       description: "Your Guide that can assist with questions about IBM Cloud"
-      #url: "https://ibmcloudbaseagent.example.com"
+      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_guide_agent"
       version: "0.1.0"
       documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/README.md"
       provider:
@@ -128,14 +199,38 @@ handlers:
             - 🗣️ Target the `RESOURCE_GROUP_NAME` resource group            
             - 🗣️ "Tell me how deployable architectures work."
             - 🗣️ "How can I create custom terraform based automation that I can share within my organization through private catalogs?"
+
   ibmcloud_account_admin_agent:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
-    agent: ibmcloud_account_admin_agent.agent.root_agent
+    agent: ibmcloud_account_admin_agent.agent.create_account_admin_agent
     name: ibmcloud_account_admin_agent
+
+    # Handler-level session configuration
+    sandbox_id: "account_admin_agent_sessions"
+    session_sharing: false
+    
+    # Agent-level session configuration
+    enable_sessions: false  # Keep simple for utility agent
+    infinite_context: true
+    token_threshold: 4000
+    max_turns_per_segment: 50
+    session_ttl_hours: 24
+    
+    # Model configuration
+    provider: "openai"
+    model: "gpt-4o-mini"
+    streaming: true
+    
+    # MCP Tool configuration - START DISABLED, CAN ENABLE LATER
+    enable_tools: true  # Set to true when MCP server is available
+    debug_tools: false
+    mcp_config_file: "configs/ibmcloud_account_admin_agent_config.json"
+    mcp_servers: ["ibmcloud-account-admin"]
+
     agent_card:
       name: IBM Cloud Account Admin Agent
-      description: "Account Admin agent for IBM Cloud"
-      #url: "https://ibmcloudbaseagent.example.com"
+      description: "Account Admin 🔐 agent for IBM Cloud"
+      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_account_admin_agent"
       version: "0.1.0"
       documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-account-admin-agent/blob/main/README.md"
       provider:
@@ -187,9 +282,9 @@ handlers:
     agent: ibmcloud_cloud_automation_agent.agent.root_agent
     name: ibmcloud_cloud_automation_agent
     agent_card:
-      name: IBM Cloud Cloud Automation Agent
-      description: "Cloud Automation agent for IBM Cloud"
-      #url: "https://ibmcloudbaseagent.example.com"
+      name: IBM Cloud Cloud Automation ⚙️ Agent
+      description: "Cloud Automation ⚙️ agent for IBM Cloud"
+      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_cloud_automation_agent"
       version: "0.1.0"
       documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-cloud-automation-agent/blob/main/README.md"
       provider:
@@ -255,6 +350,7 @@ handlers:
 #    agent_card:
 #      name: Supervisor Agent
 #      description: "Supervisor agent that collaborates with and delegates to multiple remote A2A agents"
+#      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/supervisor_agent"
 #      version: "0.1.0"
 #      documentationUrl: "https://github.com/ccmitchellusa/supervisor-agent/blob/main/README.md"
 #      provider:

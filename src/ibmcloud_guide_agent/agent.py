@@ -23,28 +23,8 @@ runtime_overlay = {
 }
 provider_config = ProviderConfig(runtime_overlay)
 
-#IBMCLOUD_MCP_TOOLS = os.getenv("IBMCLOUD_MCP_TOOLS")
-IBMCLOUD_MCP_TOOLS = "assist"
-
 # Create the configuration for the MCP server
-config_file = "ibmcloud_mcp_config.json"
-config = {
-    "mcpServers": {
-        "ibmcloud": {
-            "command": "ibmcloud",
-            "args": [        
-                "--mcp-transport",
-                "stdio",
-                "--mcp-tools",
-                IBMCLOUD_MCP_TOOLS
-            ]
-        }
-    }
-}
-
-# Write config to a file
-config_path = Path(config_file)
-config_path.write_text(json.dumps(config, indent=2))
+config_file = "configs/ibmcloud_mcp_guide_agent_config.json"
 
 try:
     # IBM Cloud serverless computing agent
@@ -60,7 +40,7 @@ try:
     When a tool's output is not json format, display the tool's output without further summary or transformation for display--unless specifically asked 
     to do so by the user.",
     """,
-        mcp_servers=["ibmcloud"],
+        mcp_servers=["ibmcloud-guide"],
         mcp_config_file=str(config_file),
         tool_namespace="tools",
         provider=AGENT_PROVIDER,

@@ -50,7 +50,7 @@ LABEL maintainer="Ryan Edgell" \
 ARG PYTHON_VERSION=3.12
 ARG IBMCLOUD_VERSION=2.35.0
 ARG IBMCLOUD_ARCH=arm64
-ARG IBMCLOUD_PLUGINS
+ARG IBMCLOUD_PLUGINS=catalogs-management,cloud-logs,cloud-object-storage,code-engine,container-registry,container-service,event-notifications,monitoring,power-iaas,project,schematics
 
 # Environment variables
 ENV VIRTUAL_ENV=/venv \
@@ -67,6 +67,7 @@ COPY --from=builder /venv /venv
 COPY --from=builder /app/dist/*.whl /tmp/
 COPY --from=builder /app/start.sh /app/start.sh
 COPY --from=builder /app/agent.yaml /app/agent.yaml
+COPY --from=builder /app/configs/*.json /app/configs/
 
 # Install the application
 RUN chmod +x /app/start.sh && \

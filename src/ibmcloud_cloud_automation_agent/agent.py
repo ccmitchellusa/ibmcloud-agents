@@ -38,10 +38,10 @@ provider_config = ProviderConfig(runtime_overlay)
 IBMCLOUD_MCP_TOOLS = "assist,resource_groups,target,catalog_da,project,schematics"
 
 # Create the configuration for the MCP server
-config_file = "ibmcloud_mcp_cloud_automation_config.json"
+config_file = "configs/ibmcloud_mcp_cloud_automation_agent_config.json"
 config = {
     "mcpServers": {
-        "ibmcloud": {
+        "ibmcloud-cloud-automation": {
             "command": "ibmcloud",
             "args": [        
                 "--mcp-transport",
@@ -96,7 +96,7 @@ IMPORTANT: Always use your tools to get real data. Never give generic responses!
 """,
         provider=provider,
         model=model,
-        mcp_servers=["ibmcloud"],
+        mcp_servers=["ibmcloud-cloud-automation"],
         mcp_config_file=str(config_file),
         tool_namespace="tools",
         streaming=streaming,

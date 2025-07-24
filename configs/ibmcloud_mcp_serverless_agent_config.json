@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "ibmcloud": {
+    "ibmcloud-serverless": {
       "command": "ibmcloud",
       "args": [
         "--mcp-transport",

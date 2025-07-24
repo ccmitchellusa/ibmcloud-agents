@@ -1194,19 +1194,29 @@ ibmcloud-deploy:
 		ibmcloud ce application update --name $(IBMCLOUD_CODE_ENGINE_APP) \
 			--image $(IBMCLOUD_IMAGE_NAME) \
 			--cpu $(IBMCLOUD_CPU) --memory $(IBMCLOUD_MEMORY) \
+			--min-scale 1 \
 			--registry-secret $(IBMCLOUD_REGISTRY_SECRET); \
 	else \
 		echo "🆕 Creating new app…"; \
 		ibmcloud ce application create --name $(IBMCLOUD_CODE_ENGINE_APP) \
 			--image $(IBMCLOUD_IMAGE_NAME) \
 			--cpu $(IBMCLOUD_CPU) --memory $(IBMCLOUD_MEMORY) \
+			--min-scale 1 \
 			--port 4444 \
 			--registry-secret $(IBMCLOUD_REGISTRY_SECRET); \
 	fi
 
+ibmcloud-ce-setup-projectsecrets:
+	@echo "Setting up secret map for Code Engine project $(IBMCLOUD_PROJECT)…"
+	@ibmcloud ce secret create --name openai-cfg --from-env-file .env
+
 ibmcloud-ce-logs:
 	@echo "📜 Streaming logs for '$(IBMCLOUD_CODE_ENGINE_APP)'…"
 	@ibmcloud ce application logs --name $(IBMCLOUD_CODE_ENGINE_APP) --follow
+
+ibmcloud-ce-events:
+	@echo "📜 Streaming events for '$(IBMCLOUD_CODE_ENGINE_APP)'…"
+	@ibmcloud ce application events --name $(IBMCLOUD_CODE_ENGINE_APP) 
 
 ibmcloud-ce-status:
 	@echo "📈 Application status for '$(IBMCLOUD_CODE_ENGINE_APP)'…"
@@ -1215,3 +1225,6 @@ ibmcloud-ce-status:
 ibmcloud-ce-rm:
 	@echo "🗑️  Deleting Code Engine app: $(IBMCLOUD_CODE_ENGINE_APP)…"
 	@ibmcloud ce application delete --name $(IBMCLOUD_CODE_ENGINE_APP) -f
+
+ibmcloud-all: podman ibmcloud-login ibmcloud-ce-login ibmcloud-tag ibmcloud-push ibmcloud-deploy ibmcloud-ce-status ibmcloud-ce-logs
+	@echo "✅ Build and deploy agents to IBM Cloud Code Engine completed successfully."

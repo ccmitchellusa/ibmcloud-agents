@@ -23,13 +23,14 @@ runtime_overlay = {
 }
 provider_config = ProviderConfig(runtime_overlay)
 
-IBMCLOUD_MCP_TOOLS = os.getenv("IBMCLOUD_MCP_TOOLS")
+#IBMCLOUD_MCP_TOOLS = os.getenv("IBMCLOUD_MCP_TOOLS")
+IBMCLOUD_MCP_TOOLS = "resource"
 
 # Create the configuration for the MCP server
-config_file = "ibmcloud_mcp_base_agent_config.json"
+config_file = "configs/ibmcloud_mcp_base_agent_config.json"
 config = {
     "mcpServers": {
-        "ibmcloud": {
+        "ibmcloud-resource-mgmt": {
             "command": "ibmcloud",
             "args": [        
                 "--mcp-transport",
@@ -68,7 +69,7 @@ If a current resource group has not been targetted, target the 'default' resourc
 IMPORTANT: Always use your tools to get real data. Never give generic responses!",
 """,
         mcp_transport="stdio",    
-        mcp_servers=["ibmcloud"],
+        mcp_servers=["ibmcloud-resource-mgmt"],
         mcp_config_file=str(config_file),
         tool_namespace="tools",
         provider=AGENT_PROVIDER,

@@ -1,12 +1,13 @@
 {
   "mcpServers": {
-    "ibmcloud": {
+    "ibmcloud-cloud-automation": {
       "command": "ibmcloud",
       "args": [
         "--mcp-transport",
         "stdio",
+        "--mcp-allow-write",
         "--mcp-tools",
-        null
+        "assist,resource_groups,target,catalog_da,project,schematics"
       ]
     }
   }
