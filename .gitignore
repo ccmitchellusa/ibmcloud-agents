@@ -16,6 +16,7 @@ wheels/
 # gitignore
 .env
 .env.ibmcloud
+.env.llm
 .vscode
 src/ibmcloud_mcp_config.json
 packages-lock.json
