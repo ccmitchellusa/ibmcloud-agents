@@ -34,7 +34,7 @@ def create_account_admin_agent(**kwargs):
     streaming = kwargs.get('streaming', True)
     
     # MCP configuration
-    config_file = kwargs.get('mcp_config_file', "configs/ibmcloud_mcp_account_admin_config.json")
+    config_file = kwargs.get('mcp_config_file', "ibmcloud_mcp_account_admin_config.json")
     mcp_servers = kwargs.get('mcp_servers', ["ibmcloud-account-admin"])
 
     logger.info(f"🕒 Creating account admin agent with sessions: {enable_sessions}")

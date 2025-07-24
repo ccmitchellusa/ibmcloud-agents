@@ -67,7 +67,7 @@ COPY --from=builder /venv /venv
 COPY --from=builder /app/dist/*.whl /tmp/
 COPY --from=builder /app/start.sh /app/start.sh
 COPY --from=builder /app/agent.yaml /app/agent.yaml
-COPY --from=builder /app/configs/*.json /app/configs/
+COPY --from=builder /app/*.json /app/
 
 # Install the application
 RUN chmod +x /app/start.sh && \

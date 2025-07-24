@@ -24,7 +24,7 @@ runtime_overlay = {
 provider_config = ProviderConfig(runtime_overlay)
 
 # Create the configuration for the MCP server
-config_file = "configs/ibmcloud_mcp_guide_agent_config.json"
+config_file = "ibmcloud_mcp_guide_agent_config.json"
 
 try:
     # IBM Cloud serverless computing agent

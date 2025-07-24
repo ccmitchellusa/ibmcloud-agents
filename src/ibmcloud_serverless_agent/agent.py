@@ -27,7 +27,7 @@ provider_config = ProviderConfig(runtime_overlay)
 IBMCLOUD_MCP_TOOLS = "target,resource_groups,code-engine_application_list,code-engine_project_select,code-engine_project_list,code-engine_project_get,code-engine_project_current,code-engine_application_get,code-engine_application_logs,code-engine_application_restart,code-engine_application_create,code-engine_build_list,code-engine-build_get,code-engine_application_events,code-engine_buildrun_logs,code-engine_buildrun_list,code-engine_buildrun_get"
 
 # Create the configuration for the MCP server
-config_file = "configs/ibmcloud_mcp_serverless_agent_config.json"
+config_file = "ibmcloud_mcp_serverless_agent_config.json"
 config = {
     "mcpServers": {
         "ibmcloud-serverless": {

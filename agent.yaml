@@ -31,7 +31,7 @@ handlers:
     # MCP Tool configuration - START DISABLED, CAN ENABLE LATER
     enable_tools: true  # Set to true when MCP server is available
     debug_tools: false
-    mcp_config_file: "configs/ibmcloud_mcp_base_agent_config.json"
+    mcp_config_file: "ibmcloud_mcp_base_agent_config.json"
     mcp_servers: ["ibmcloud-resource-mgmt"]
 
     agent_card:
@@ -88,7 +88,7 @@ handlers:
     # MCP Tool configuration - START DISABLED, CAN ENABLE LATER
     enable_tools: true  # Set to true when MCP server is available
     debug_tools: false
-    mcp_config_file: "configs/ibmcloud_serverless_agent_config.json"
+    mcp_config_file: "ibmcloud_serverless_agent_config.json"
     mcp_servers: ["ibmcloud-serverless"]
 
     agent_card:
@@ -163,7 +163,7 @@ handlers:
     # MCP Tool configuration - START DISABLED, CAN ENABLE LATER
     enable_tools: true  # Set to true when MCP server is available
     debug_tools: false
-    mcp_config_file: "configs/ibmcloud_guide_agent_config.json"
+    mcp_config_file: "ibmcloud_guide_agent_config.json"
     mcp_servers: ["ibmcloud-guide"]
 
     agent_card:
@@ -224,7 +224,7 @@ handlers:
     # MCP Tool configuration - START DISABLED, CAN ENABLE LATER
     enable_tools: true  # Set to true when MCP server is available
     debug_tools: false
-    mcp_config_file: "configs/ibmcloud_account_admin_agent_config.json"
+    mcp_config_file: "ibmcloud_account_admin_agent_config.json"
     mcp_servers: ["ibmcloud-account-admin"]
 
     agent_card:

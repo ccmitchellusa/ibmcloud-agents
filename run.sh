@@ -7,6 +7,7 @@ source .env
 show_banner() {
     # Define IBM Blue color (hex 0f62fe)
     local IBM_BLUE='\033[38;2;15;98;254m'
+    local KINGSMEN_YELLO='\033[38;2;255;204;0m'
     local RESET='\033[0m'
     
     echo -e "${IBM_BLUE}"
@@ -18,7 +19,12 @@ show_banner() {
     echo "    ██║██╔══██╗██║╚██╔╝██║    ██║     ██║     ██║   ██║██║   ██║██║  ██║"
     echo "    ██║██████╔╝██║ ╚═╝ ██║    ╚██████╗███████╗╚██████╔╝╚██████╔╝██████╔╝"
     echo "    ╚═╝╚═════╝ ╚═╝     ╚═╝     ╚═════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝ "
-    echo ""                  A2A Server w/ Platform Engineering Agents
+    echo -e "${KINGSMEN_YELLO}"
+    echo "        _     _ _____ __   _  ______ _______ _______ _______ __   _"
+    echo "        |____/    |   | \  | |  ____ |______ |  |  | |______ | \  |"
+    echo "        |    \_ __|__ |  \_| |_____| ______| |  |  | |______ |  \_|"
+    echo -e "${IBM_BLUE}"
+    echo "                   A2A Server w/ Platform Engineering Agents"
     echo "==============================================================================="
     echo -e "${RESET}"
 }
@@ -46,7 +52,7 @@ show_banner
 # Login to IBM Cloud using api key. LLM will be acting on user's behalf, with user's access
 # ibmcloud login --apikey IBMCLOUD_APIKEY
 $IBMCLOUD_CLI_PATH login --apikey $IBMCLOUD_API_KEY -r $IBMCLOUD_REGION
-#/Users/chrism1/Downloads/ibmcloud target -g ccm
+$IBMCLOUD_CLI_PATH target -g $IBMCLOUD_RESOURCE_GROUP
 # uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug --enable-flow-diagnosis
 # uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug --list-routes
 # uv run -m ibmcloud_base_agent.main --config agent.yaml --log-level debug 

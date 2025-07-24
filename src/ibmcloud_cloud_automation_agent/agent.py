@@ -38,7 +38,7 @@ provider_config = ProviderConfig(runtime_overlay)
 IBMCLOUD_MCP_TOOLS = "assist,resource_groups,target,catalog_da,project,schematics"
 
 # Create the configuration for the MCP server
-config_file = "configs/ibmcloud_mcp_cloud_automation_agent_config.json"
+config_file = "ibmcloud_mcp_cloud_automation_agent_config.json"
 config = {
     "mcpServers": {
         "ibmcloud-cloud-automation": {
