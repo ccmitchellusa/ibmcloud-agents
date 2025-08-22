@@ -6,7 +6,7 @@
         "--mcp-transport",
         "stdio",
         "--mcp-tools",
-        "assist"
+        "guide,docs,catalog,services"
       ]
     }
   }

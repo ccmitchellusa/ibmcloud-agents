@@ -33,11 +33,12 @@ handlers:
     debug_tools: false
     mcp_config_file: "ibmcloud_mcp_base_agent_config.json"
     mcp_servers: ["ibmcloud-resource-mgmt"]
-
+    mcp_transport: "stdio"  
+    
     agent_card:
       name: IBM Cloud Base Agent ☁️
       description: "Base agent for building IBM Cloud agents"
-      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_base_agent"
+#      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_base_agent"
       version: "0.1.0"
       documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/README.md"
       provider:
@@ -94,7 +95,7 @@ handlers:
     agent_card:
       name: IBM Cloud Serverless Agent
       description: "Serverless computing agent for IBM Cloud"
-      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_serverless_agent"
+ #     url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_serverless_agent"
       version: "0.1.0"
       documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/README.md"
       provider:
@@ -169,7 +170,7 @@ handlers:
     agent_card:
       name: IBM Cloud Guide 🦮
       description: "Your Guide that can assist with questions about IBM Cloud"
-      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_guide_agent"
+  #    url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_guide_agent"
       version: "0.1.0"
       documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-base-agent/blob/main/README.md"
       provider:
@@ -230,7 +231,7 @@ handlers:
     agent_card:
       name: IBM Cloud Account Admin Agent
       description: "Account Admin 🔐 agent for IBM Cloud"
-      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_account_admin_agent"
+   #   url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_account_admin_agent"
       version: "0.1.0"
       documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-account-admin-agent/blob/main/README.md"
       provider:
@@ -284,7 +285,7 @@ handlers:
     agent_card:
       name: IBM Cloud Cloud Automation ⚙️ Agent
       description: "Cloud Automation ⚙️ agent for IBM Cloud"
-      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_cloud_automation_agent"
+    #  url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/ibmcloud_cloud_automation_agent"
       version: "0.1.0"
       documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-cloud-automation-agent/blob/main/README.md"
       provider:

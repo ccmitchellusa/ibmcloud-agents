@@ -1,71 +1,22 @@
 """
-IBM Cloud Platform Engineering base agent with IBMCloud MCP Server built in.
+IBM Cloud Cloud Automation Agent - extends the base agent with automation capabilities.
 """
-import json
 import logging
-import os
-from pathlib import Path
-from a2a_server.tasks.handlers.chuk.chuk_agent import ChukAgent
-from chuk_llm.configuration import ProviderConfig
+from ibmcloud_base_agent.agent import IBMCloudBaseAgent
 
 logger = logging.getLogger(__name__)
 
-# Extract session-related parameters with defaults
-enable_sessions =True
-enable_tools = True
-debug_tools = False
-infinite_context = True
-token_threshold = 4000
-max_turns_per_segment = 50
-session_ttl_hours = 24 # hours
-
-# Extract other configurable parameters
-provider = 'openai'
-model = 'gpt-4o-mini'
-streaming = True
-
-runtime_overlay = {
-    "litellm": {
-        "client": "chuk_llm.llm.providers.openai_client:OpenAILLMClient",
-        "api_key_env": "LITELLM_PROXY_API_KEY",
-        "default_model": model,
-        "api_base": os.getenv("LITELLM_PROXY_URL"),
-    }
-}
-provider_config = ProviderConfig(runtime_overlay)
-
-#IBMCLOUD_MCP_TOOLS = os.getenv("IBMCLOUD_MCP_TOOLS")
-IBMCLOUD_MCP_TOOLS = "assist,resource_groups,target,catalog_da,project,schematics"
-
-# Create the configuration for the MCP server
-config_file = "ibmcloud_mcp_cloud_automation_agent_config.json"
-config = {
-    "mcpServers": {
-        "ibmcloud-cloud-automation": {
-            "command": "ibmcloud",
-            "args": [        
-                "--mcp-transport",
-                "stdio",
-                "--mcp-allow-write",
-                "--mcp-tools",
-                IBMCLOUD_MCP_TOOLS
-            ]
-        }
-    }
-}
-
-# Write config to a file
-config_path = Path(config_file)
-config_path.write_text(json.dumps(config, indent=2))
-
-try:
-    # IBM Cloud cloud automation agent
-    root_agent = ChukAgent(
-        name="ibmcloud_cloud_automation_agent",
-        description="An agent that help with cloud automation tasks for IBM Cloud.",
-        instruction="""
+class IBMCloudAutomationAgent(IBMCloudBaseAgent):
+    """IBM Cloud Cloud Automation Agent with deployment and infrastructure automation capabilities."""
+    
+    def create_automation_agent(self, **kwargs):
+        """Create a cloud automation agent with configurable parameters."""
+        return self.create_agent(
+            name="ibmcloud_cloud_automation_agent",
+            description="An agent that help with cloud automation tasks for IBM Cloud.",
+            instruction="""
 You are an IBM Cloud platform engineer called Vincent, you will act as an expert with deep expertise
-in IBM Cloud automation capabilities capabilities.  
+in IBM Cloud automation capabilities.  
 
 Cloud automation tasks include:
 - Understanding Solution Requirements - Asking the user for information about the type of solution that they want to build, such as a web application, data processing pipeline, or machine learning model.
@@ -92,46 +43,32 @@ When a tool's output is not JSON format, display the tool's output without furth
 to do so by the user.
 
 IMPORTANT: Always use your tools to get real data. Never give generic responses!
-
 """,
-        provider=provider,
-        model=model,
-        mcp_servers=["ibmcloud-cloud-automation"],
-        mcp_config_file=str(config_file),
-        tool_namespace="tools",
-        streaming=streaming,
-        
-        # 🔧 CONFIGURABLE: Session management settings from YAML
-        enable_sessions=enable_sessions,
-        infinite_context=infinite_context,
-        token_threshold=token_threshold,
-        max_turns_per_segment=max_turns_per_segment,
-        session_ttl_hours=session_ttl_hours,
-        
-        # 🔧 CONFIGURABLE: Tool settings from YAML  
-        enable_tools=enable_tools,
-        debug_tools=debug_tools,
-    )
-    logger.info("IBM Cloud Cloud Automation agent created successfully with MCP tools")
-    
+            mcp_tools="assist,resource_groups,target,catalog_da,project,schematics",
+            mcp_server_name="ibmcloud-cloud-automation",
+            config_file="ibmcloud_mcp_cloud_automation_agent_config.json",
+            allow_write=True,
+            **kwargs
+        )
+
+# Global instance
+_automation_instance = IBMCloudAutomationAgent()
+
+def create_cloud_automation_agent(**kwargs):
+    """Create a cloud automation agent with configurable parameters."""
+    return _automation_instance.create_automation_agent(**kwargs)
+
+# For backward compatibility
+def create_automation_agent(**kwargs):
+    """Create a cloud automation agent with configurable parameters."""
+    return create_cloud_automation_agent(**kwargs)
+
+# For direct import compatibility
+try:
+    root_agent = create_cloud_automation_agent(enable_tools=True)
 except Exception as e:
-    logger.error(f"Failed to create IBM Cloud Cloud Automation agent with MCP: {e}")
-    logger.error("Make sure to install: ibmcloud-mcp-server")
-    
-    # Fallback agent with clear error message
-    root_agent = ChukAgent(
-        name="ibmcloud_cloud_automation_agent",
-        description="An agent that performs cloud automation tasks for IBM Cloud resources & services.",
-        instruction="""I'm the IBM Cloud Cloud Automation agent, but my IBM Cloud connection is currently unavailable.
+    logger.error(f"❌ Failed to create module-level cloud_automation_agent: {e}")
+    root_agent = None
 
-In the meantime, I recommend checking:
-- cloud.ibm.com for IBM Cloud status
-
-I apologize for the inconvenience!""",
-        provider=provider,
-        model=model,
-        mcp_transport="stdio",
-        mcp_servers=[],  # No MCP servers for fallback
-        namespace="stdio"
-    )
-    logger.warning("Created fallback IBM Cloud Cloud Automation agent - MCP tools unavailable")
+# Export everything for flexibility
+__all__ = ['create_cloud_automation_agent', 'create_automation_agent', 'root_agent']
