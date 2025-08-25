@@ -1,36 +1,44 @@
 #!/usr/bin/env python3
-# main.py
 """
-Launch multi-agent server. 
+Launch supervisor agent server using a2a-server framework.
 
-This example launches an A2A server by passing a raw Google ADK `Agent`
-directly into the handler; no manual adapter import or `use_handler_discovery`
-flag is needed.
+This server launches an A2A server that can delegate tasks to other agents
+using the a2a protocol without Google ADK dependencies.
 """
+
+import os
 import uvicorn
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # a2a imports
 from a2a_server.app import create_app
-from a2a_server.tasks.handlers.google_adk_handler import GoogleADKHandler
+from .supervisor_handler import create_supervisor_handler
 
-# import the sample agent
-from .agent import root_agent as root_agent
+# Get configuration from environment with defaults
+HOST = os.getenv('SUPERVISOR_HOST', '0.0.0.0')
+PORT = int(os.getenv('SUPERVISOR_PORT', '9000'))  # Default to 9000 to avoid conflicts
 
-# constants
-HOST = "0.0.0.0"
-PORT = 8000
 
 def main():
-    # Instantiate the handler directly with the raw ADK agent
-    handler = GoogleADKHandler(root_agent)
-
-    # Create the FastAPI app with just this handler
+    """Main entry point for the supervisor agent server."""
+    # Create the supervisor handler
+    handler = create_supervisor_handler()
+    
+    # Create the FastAPI app with the handler
     app = create_app(
-        handlers=[handler]
+        handlers=[handler],
+        title="Supervisor Agent",
+        description="A2A Supervisor agent that delegates tasks to specialized agents"
     )
-
+    
     # Launch the server
+    print(f"Starting Supervisor Agent on {HOST}:{PORT}")
+    print(f"Agent URLs configured from: SUPERVISOR_AGENT_URLS environment variable")
     uvicorn.run(app, host=HOST, port=PORT)
+
 
 if __name__ == "__main__":
     main()

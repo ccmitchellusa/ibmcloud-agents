@@ -3,9 +3,39 @@ server:
   host: 0.0.0.0
   port: 8000
 
+# Optional IBM Cloud services configuration
+# These services are created by running: make ibmcloud-services-setup
+services:
+  # IBM Cloud Monitoring (Sysdig) for OTEL metrics
+  monitoring:
+    enabled: ${IBMCLOUD_MONITORING_ENABLED:-false}
+    instance_name: ${IBMCLOUD_MONITORING_INSTANCE}
+    service_key_name: ${IBMCLOUD_MONITORING_INSTANCE}-key
+    otel_endpoint: ${IBMCLOUD_MONITORING_OTEL_ENDPOINT}
+    access_key: ${IBMCLOUD_MONITORING_ACCESS_KEY}
+    
+  # IBM Cloud Logs for centralized logging  
+  logging:
+    enabled: ${IBMCLOUD_LOGS_ENABLED:-false}
+    instance_name: ${IBMCLOUD_LOGS_INSTANCE}
+    service_key_name: ${IBMCLOUD_LOGS_INSTANCE}-key
+    ingestion_endpoint: ${IBMCLOUD_LOGS_ENDPOINT}
+    ingestion_key: ${IBMCLOUD_LOGS_INGESTION_KEY}
+    
+  # Object Storage for session management and conversation history
+  storage:
+    enabled: ${IBMCLOUD_COS_ENABLED:-false}
+    instance_name: ${IBMCLOUD_COS_INSTANCE}
+    service_key_name: ${IBMCLOUD_COS_INSTANCE}-key
+    bucket_name: ${IBMCLOUD_COS_BUCKET}
+    endpoint: ${IBMCLOUD_COS_ENDPOINT}
+    access_key_id: ${IBMCLOUD_COS_ACCESS_KEY_ID}
+    secret_access_key: ${IBMCLOUD_COS_SECRET_ACCESS_KEY}
+    region: ${IBMCLOUD_REGION:-us-south}
+
 handlers:
   use_discovery: false
-  default: ibmcloud_account_admin_agent
+  default: supervisor_agent
 
   ibmcloud_base_agent:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
@@ -344,35 +374,149 @@ handlers:
             - 🗣️ Find errors in the deployment logs for project PROJECT_NAME.
             - 🗣️ What can I try to resolve these deployment errors?
             - 🗣️ Delete the access group, `ACCESS_GROUP` name
-#  supervisor_agent:
-#    type: a2a_server.tasks.handlers.adk.google_adk_handler.GoogleADKHandler
-#    agent: supervisor_agent.root_agent
-#    name: supervisor_agent
-#    agent_card:
-#      name: Supervisor Agent
-#      description: "Supervisor agent that collaborates with and delegates to multiple remote A2A agents"
+  supervisor_agent:
+    type: src.supervisor_agent.supervisor_handler.SupervisorHandler
+    name: supervisor_agent
+
+    # Handler-level session configuration
+    sandbox_id: "supervisor_agent_sessions"
+    session_sharing: false
+    
+    # Agent-level session configuration
+    enable_sessions: true  # Enable sessions for coordination
+    infinite_context: true
+    token_threshold: 4000
+    max_turns_per_segment: 50
+    session_ttl_hours: 24
+    
+    # Model configuration
+    provider: "openai"
+    model: "gpt-4o-mini"
+    streaming: true
+    
+    # Supervisor-specific configuration
+    # Agent URLs to delegate to - can be configured here or via SUPERVISOR_AGENT_URLS environment variable
+    agent_urls:
+      - "http://localhost:8000/ibmcloud_base_agent"
+      - "http://localhost:8000/ibmcloud_account_admin_agent"
+      - "http://localhost:8000/ibmcloud_serverless_agent"
+      - "http://localhost:8000/ibmcloud_guide_agent"
+      - "http://localhost:8000/ibmcloud_cloud_automation_agent"
+    
+    agent_card:
+      name: Supervisor Agent 🤖
+      description: "Supervisor agent that intelligently delegates tasks to specialized IBM Cloud agents"
 #      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/supervisor_agent"
-#      version: "0.1.0"
-#      documentationUrl: "https://github.com/ccmitchellusa/supervisor-agent/blob/main/README.md"
-#      provider:
-#        organization: "IBM"
-#        url: "https://www.ibm.com"
-#      capabilities:
-#        streaming: true
-#        pushNotifications: false
-#      authentication:
-#        schemes:
-#          - "None"
-#      defaultInputModes:
-#        - "text/plain"
-#      defaultOutputModes:
-#        - "text/plain"
-#      skills:
-#        - id: delegator
-#          name: Delegator
-#          description: "Connects to and delegates tasks to multiple remote A2A agents"
-#          tags:
-#            - agent
-#            - delegation
-#          examples:
-#            - "List all agents"
+      version: "1.0.0"
+      documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-agents/blob/main/src/supervisor_agent/README.md"
+      provider:
+        organization: "ccmitchellusa"
+        url: "https://www.linkedin.com/in/chris-mitchell-ibm/"
+      capabilities:
+        streaming: true
+        pushNotifications: false
+      authentication:
+        schemes:
+          - "None"
+      defaultInputModes:
+        - "text/plain"
+      defaultOutputModes:
+        - "text/plain"
+      skills:
+        - id: intelligent_delegation
+          name: 🧠 Intelligent Task Delegation
+          description: "Uses LLM-powered routing to delegate tasks to the most appropriate specialized agent"
+          tags:
+            - agent
+            - delegation
+            - routing
+            - coordination
+          examples:
+            - 🗣️ "List all my IBM Cloud resource groups"
+            - 🗣️ "Create a new serverless application"
+            - 🗣️ "Add a user to my account with viewer permissions"
+            - 🗣️ "Help me understand IBM Cloud best practices"
+            - 🗣️ "Set up a deployment pipeline for my application"
+        - id: multi_agent_coordination
+          name: 🤝 Multi-Agent Coordination
+          description: "Coordinates complex tasks that may require multiple specialized agents"
+          tags:
+            - coordination
+            - workflow
+            - multi-agent
+          examples:
+            - 🗣️ "Set up a complete development environment with proper access controls"
+            - 🗣️ "Deploy and configure monitoring for my application"
+            - 🗣️ "Help me migrate my workload to IBM Cloud with proper governance"
+  
+  kingsmen_agent:
+    type: src.kingsmen_agent.kingsmen_handler.KingsmenHandler
+    name: kingsmen_agent
+
+    # Handler-level session configuration
+    sandbox_id: "kingsmen_agent_sessions"
+    session_sharing: false
+    
+    # Agent-level session configuration
+    enable_sessions: true
+    infinite_context: true
+    token_threshold: 4000
+    max_turns_per_segment: 50
+    session_ttl_hours: 24
+    
+    # Model configuration
+    provider: "openai"
+    model: "gpt-4o-mini"
+    streaming: true
+    
+    # Kingsmen-specific configuration
+    team_environment: "localhost"
+    
+    agent_card:
+      name: The Kingsmen 🎩
+      description: "An elite team of IBM Cloud specialists - Galahad, Lancelot, Percival, Gareth, and Tristan"
+#      url: "https://ibmcloud-agents.1uo9xqkaspg3.us-east.codeengine.appdomain.cloud/kingsmen_agent"
+      version: "1.0.0"
+      documentationUrl: "https://github.com/ccmitchellusa/ibmcloud-agents/blob/main/src/kingsmen_agent/README.md"
+      provider:
+        organization: "ccmitchellusa"
+        url: "https://www.linkedin.com/in/chris-mitchell-ibm/"
+      capabilities:
+        streaming: true
+        pushNotifications: false
+      authentication:
+        schemes:
+          - "None"
+      defaultInputModes:
+        - "text/plain"
+      defaultOutputModes:
+        - "text/plain"
+      skills:
+        - id: elite_team_coordination
+          name: 🎩 Elite Team Coordination
+          description: "Coordinates an elite team of IBM Cloud specialists, each with unique codenames and expertise areas"
+          tags:
+            - kingsmen
+            - elite-team
+            - specialization
+            - coordination
+          examples:
+            - 🗣️ "Show me the Kingsmen roster"
+            - 🗣️ "I need help with IBM Cloud security and access management"
+            - 🗣️ "Set up a serverless application with proper monitoring"
+            - 🗣️ "Create a complete cloud automation pipeline"
+            - 🗣️ "Which Kingsman should handle infrastructure setup?"
+        - id: specialized_expertise
+          name: 🎯 Specialized Expertise Routing
+          description: "Routes requests to the most appropriate specialist based on their unique skills and codenames"
+          tags:
+            - expertise
+            - routing
+            - specialization
+            - codenames
+          examples:
+            - 🗣️ "Send this to Lancelot" # Security specialist
+            - 🗣️ "Have Percival handle this" # Serverless specialist  
+            - 🗣️ "This looks like a job for Gareth" # Strategy specialist
+            - 🗣️ "Tristan should automate this" # Automation specialist
+            - 🗣️ "Let Galahad handle the basics" # Foundation specialist

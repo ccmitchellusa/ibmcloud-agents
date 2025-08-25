@@ -9,6 +9,7 @@
 - **🪶Lightweight 🕵️ A2A-compliant**: A2A Protocol support is provided via [a2a-server](https://github.com/chrishayuk/a2a-server). Each agent is exposed on A2A endpoints with agent cards that can be easily configured (YAML).
 - **📦 Runs on _any_ Container runtime**: Agent containers can be deployed on any container runtime, including Podman, Rancher, Docker™️,  Kubernetes, IBM Cloud Code Engine (serverless), or RedHat™️ OpenShift.
 - **🧠 BYOM** - Bring your own model (Caveat: Models MUST support OpenAI-compliant 🛠️tool calling features). The integrated [chuk-llm](https://github.com/chrishayuk/chuk-llm) library makes working with multiple model providers and models extremely SIMPLE--and FAST!
+- **☁️ Production Services Integration** - Optional integration with IBM Cloud Monitoring (OTEL metrics), IBM Cloud Logs (centralized logging), and Object Storage (session management) for production deployments. Use the [terraform-ibm-agentic-services](https://github.com/ccmitchellusa/terraform-ibm-agentic-services) deployable architecture for infrastructure-as-code deployment.
 - **🕵️ Base Agent** - A base agent example is provided that can be easily customized with different models, tools and instructions to create new IBM Cloud platform engineering agents.
 
 ## ❤️ Keeping it simple
@@ -20,6 +21,28 @@ The common core of the agents is found in [`src/ibmcloud_base_agent/agent.py`](s
 - 🕵️Agent 📃instructions - System prompt that defines the agents core behavior
 
 This agent is the default agent that will appear when connecting to the server with a2a-cli (or other a2a client app).
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
+- **[📖 Getting Started](docs/README.md)** - Complete overview and quick start guide
+- **[🤖 Agent Overview](docs/agents/README.md)** - Understanding all available agents  
+- **[🎩 Kingsmen Curl Tutorial](docs/tutorials/KINGSMEN_CURL_TUTORIAL.md)** - Complete guide to using curl commands
+- **[🛠️ Interactive Examples](docs/examples/kingsmen_curl_examples.sh)** - Hands-on demo script
+
+### Quick Tutorial Access
+
+Try the Kingsmen team with curl commands:
+
+```bash
+# Start the server
+export OPENAI_API_KEY="your-key"
+python -m a2a_server.run
+
+# Run interactive examples
+./docs/examples/kingsmen_curl_examples.sh
+```
 
 ## 🗜️Installation & Setup
 
@@ -241,6 +264,61 @@ docker build -f Dockerfile --push -t icr.io/agentic/a2a .
 7.  Select “Specify build details” > Next > Next >.
 8. Select a container registry namespace
 9. Select Done
+
+## ☁️ IBM Cloud Services Integration
+
+### Optional Supporting Services
+
+When deploying to IBM Cloud Code Engine, you can optionally set up supporting services for production monitoring and session management:
+
+- **📊 IBM Cloud Monitoring (Sysdig)** - OTEL metrics collection and application monitoring
+- **📝 IBM Cloud Logs** - Centralized logging and log analysis  
+- **🗂️ Object Storage** - Persistent session management and conversation history
+
+### Setting up Supporting Services
+
+1. **Create the services**:
+   ```bash
+   # Set up required environment variables
+   cp .env.ibmcloud.example .env.ibmcloud
+   # Edit .env.ibmcloud with your IBM Cloud settings
+   
+   # Create all supporting services
+   make ibmcloud-services-setup
+   ```
+
+2. **Get service credentials**:
+   ```bash
+   # Display environment variables for the created services
+   make ibmcloud-services-env
+   ```
+
+3. **Configure your deployment**:
+   ```bash
+   # Copy the output from step 2 to your .env.ibmcloud file
+   # Set the *_ENABLED flags to true for services you want to use
+   
+   # Example:
+   IBMCLOUD_MONITORING_ENABLED=true
+   IBMCLOUD_LOGS_ENABLED=true  
+   IBMCLOUD_COS_ENABLED=true
+   ```
+
+4. **Deploy with services**:
+   ```bash
+   # Deploy to IBM Cloud with monitoring and storage
+   make ibmcloud-all
+   ```
+
+### Service Configuration Details
+
+The agents automatically detect and configure these services based on environment variables:
+
+- **Monitoring**: OTEL metrics are automatically exported to IBM Cloud Monitoring when enabled
+- **Logging**: Application logs are sent to IBM Cloud Logs for centralized analysis
+- **Storage**: Session data and conversation history are stored in Object Storage for persistence
+
+For manual configuration, see the service configuration in [`agent.yaml`](agent.yaml) and [`src/common/services.py`](src/common/services.py).
 
 ### Connecting to remote agents running on IBM Cloud Code Engine
 
