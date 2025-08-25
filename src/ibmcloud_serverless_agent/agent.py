@@ -29,7 +29,7 @@ If a current resource group has not been targetted, target the 'default' resourc
 
 IMPORTANT: Always use your tools to get real data. Never give generic responses!
 """,
-            mcp_tools="target,resource_groups,code-engine_application_list,code-engine_project_select,code-engine_project_list,code-engine_project_get,code-engine_project_current,code-engine_application_get,code-engine_application_logs,code-engine_application_restart,code-engine_application_create,code-engine_build_list,code-engine-build_get,code-engine_application_events,code-engine_buildrun_logs,code-engine_buildrun_list,code-engine_buildrun_get",
+            mcp_tools="target,resource_groups,code-engine",
             mcp_server_name="ibmcloud-serverless",
             config_file="ibmcloud_mcp_serverless_agent_config.json",
             allow_write=True,

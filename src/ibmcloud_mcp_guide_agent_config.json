@@ -1,13 +1,12 @@
 {
   "mcpServers": {
-    "ibmcloud-serverless": {
+    "ibmcloud-guide": {
       "command": "ibmcloud",
       "args": [
         "--mcp-transport",
         "stdio",
-        "--mcp-allow-write",
         "--mcp-tools",
-        "target,resource_groups,code-engine"
+        "guide,docs,catalog,services"
       ]
     }
   }
