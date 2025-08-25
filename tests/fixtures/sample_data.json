@@ -1,0 +1,226 @@
+{
+  "sample_agent_cards": [
+    {
+      "name": "IBM Cloud Base Agent",
+      "description": "Base IBM Cloud platform engineering agent with core IBM Cloud MCP tools",
+      "url": "http://localhost:8000/ibmcloud_base_agent",
+      "version": "1.0.0",
+      "provider": {
+        "organization": "IBM Cloud",
+        "url": "https://cloud.ibm.com"
+      },
+      "capabilities": {
+        "streaming": false,
+        "pushNotifications": false,
+        "stateTransitionHistory": false
+      },
+      "defaultInputModes": ["text"],
+      "defaultOutputModes": ["text"],
+      "skills": [
+        {
+          "id": "ibm-cloud-basic",
+          "name": "IBM Cloud Basic Operations",
+          "description": "Basic IBM Cloud operations like setting target context and listing resources",
+          "inputModes": ["text"],
+          "outputModes": ["text"]
+        }
+      ]
+    },
+    {
+      "name": "IBM Cloud Serverless Agent",
+      "description": "Specialized agent for IBM Cloud serverless computing with Code Engine",
+      "url": "http://localhost:8000/ibmcloud_serverless_agent", 
+      "version": "1.0.0",
+      "provider": {
+        "organization": "IBM Cloud",
+        "url": "https://cloud.ibm.com"
+      },
+      "capabilities": {
+        "streaming": false,
+        "pushNotifications": false,
+        "stateTransitionHistory": false
+      },
+      "defaultInputModes": ["text"],
+      "defaultOutputModes": ["text"],
+      "skills": [
+        {
+          "id": "code-engine-management",
+          "name": "Code Engine Management",
+          "description": "Manage IBM Cloud Code Engine projects, applications, and jobs",
+          "inputModes": ["text"],
+          "outputModes": ["text"]
+        }
+      ]
+    }
+  ],
+  "sample_tasks": [
+    {
+      "id": "task-001",
+      "sessionId": "session-123",
+      "status": {
+        "state": "submitted",
+        "timestamp": "2024-01-01T00:00:00Z"
+      },
+      "message": {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "text": "List all resource groups in my IBM Cloud account"
+          }
+        ]
+      },
+      "metadata": {
+        "source": "test",
+        "priority": "normal"
+      }
+    },
+    {
+      "id": "task-002", 
+      "sessionId": "session-456",
+      "status": {
+        "state": "working",
+        "message": {
+          "role": "agent",
+          "parts": [
+            {
+              "type": "text",
+              "text": "Connecting to IBM Cloud API..."
+            }
+          ]
+        },
+        "timestamp": "2024-01-01T00:01:00Z"
+      },
+      "message": {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text", 
+            "text": "Create a new Code Engine project named 'my-serverless-project'"
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-003",
+      "sessionId": "session-789", 
+      "status": {
+        "state": "completed",
+        "message": {
+          "role": "agent",
+          "parts": [
+            {
+              "type": "text",
+              "text": "Successfully created resource group 'test-rg'"
+            }
+          ]
+        },
+        "timestamp": "2024-01-01T00:05:00Z"
+      },
+      "message": {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "text": "Create a resource group named 'test-rg'"
+          }
+        ]
+      },
+      "artifacts": [
+        {
+          "name": "resource-group-details",
+          "description": "Details of the created resource group",
+          "parts": [
+            {
+              "type": "data",
+              "data": {
+                "id": "rg-12345",
+                "name": "test-rg",
+                "state": "ACTIVE",
+                "created_at": "2024-01-01T00:04:30Z"
+              }
+            }
+          ],
+          "index": 0
+        }
+      ]
+    }
+  ],
+  "sample_messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Hello, I need help with IBM Cloud"
+        }
+      ]
+    },
+    {
+      "role": "agent",
+      "parts": [
+        {
+          "type": "text", 
+          "text": "Hello! I'm your IBM Cloud assistant. I can help you with various IBM Cloud operations including resource management, serverless computing, and account administration. What would you like to do today?"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "type": "text",
+          "text": "Can you show me my current target context?"
+        },
+        {
+          "type": "data",
+          "data": {
+            "requestType": "contextQuery",
+            "includeDetails": true
+          }
+        }
+      ]
+    }
+  ],
+  "sample_errors": [
+    {
+      "code": -32001,
+      "message": "Task not found",
+      "data": {
+        "taskId": "nonexistent-task",
+        "timestamp": "2024-01-01T00:00:00Z"
+      }
+    },
+    {
+      "code": -32600,
+      "message": "Request payload validation error",
+      "data": {
+        "field": "message.parts",
+        "error": "Field is required"
+      }
+    }
+  ],
+  "sample_configs": {
+    "monitoring": {
+      "enabled": true,
+      "instance_name": "test-monitoring",
+      "otel_endpoint": "https://otel.test.monitoring.com",
+      "access_key": "test-access-key-123"
+    },
+    "logging": {
+      "enabled": true,
+      "instance_name": "test-logs",
+      "ingestion_endpoint": "https://logs.test.com/ingest",
+      "ingestion_key": "test-ingestion-key-456"
+    },
+    "storage": {
+      "enabled": true,
+      "instance_name": "test-cos",
+      "bucket_name": "test-sessions-bucket",
+      "endpoint": "https://s3.us-south.cloud-object-storage.test.com",
+      "access_key_id": "test-cos-access-key",
+      "secret_access_key": "test-cos-secret-key",
+      "region": "us-south"
+    }
+  }
+}

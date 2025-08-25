@@ -124,6 +124,10 @@ class SupervisorHandler(ResilientHandler):
         self.agent_connections: Dict[str, RemoteAgentConnection] = {}
         self.agent_registry: Dict[str, Dict[str, Any]] = {}
         self._connections_initialized = False
+        
+        # Track which agents were added dynamically vs configured at startup
+        self._dynamic_agents: set[str] = set()
+        self._configured_urls: List[str] = self.agent_urls.copy()
     
     async def _ensure_connections(self):
         """Ensure agent connections are initialized."""
@@ -475,11 +479,267 @@ If no agent is suitable, respond with 'none'."""
                 )
             )
     
+    async def add_team_member(self, agent_url: str, agent_name: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Dynamically add a new team member agent.
+        
+        Args:
+            agent_url: URL of the agent to add
+            agent_name: Optional name to assign to the agent
+            
+        Returns:
+            Dict containing the result of adding the agent
+        """
+        try:
+            # Normalize URL
+            agent_url = agent_url.strip()
+            if not agent_url.startswith('http'):
+                agent_url = f"http://{agent_url}"
+            
+            # Check if already connected
+            for name, info in self.agent_registry.items():
+                if info['url'] == agent_url:
+                    return {
+                        'success': False,
+                        'error': f'Agent at {agent_url} already connected as {name}',
+                        'agent_name': name
+                    }
+            
+            logger.info(f"Adding new team member at {agent_url}")
+            connection = RemoteAgentConnection(agent_url)
+            
+            if await connection.connect():
+                actual_agent_name = agent_name or connection.card.name
+                
+                # Handle name conflicts
+                original_name = actual_agent_name
+                counter = 1
+                while actual_agent_name in self.agent_connections:
+                    actual_agent_name = f"{original_name}_{counter}"
+                    counter += 1
+                
+                # Add to connections and registry
+                self.agent_connections[actual_agent_name] = connection
+                self.agent_registry[actual_agent_name] = {
+                    'name': actual_agent_name,
+                    'description': connection.card.description,
+                    'url': agent_url,
+                    'streaming': connection.supports_streaming,
+                    'added_at': datetime.now().isoformat(),
+                    'dynamic': True
+                }
+                
+                # Track as dynamic agent
+                self._dynamic_agents.add(actual_agent_name)
+                
+                logger.info(f"Successfully added team member: {actual_agent_name}")
+                return {
+                    'success': True,
+                    'agent_name': actual_agent_name,
+                    'description': connection.card.description,
+                    'url': agent_url,
+                    'streaming': connection.supports_streaming
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': f'Failed to connect to agent at {agent_url}'
+                }
+                
+        except Exception as e:
+            logger.error(f"Error adding team member at {agent_url}: {e}")
+            return {
+                'success': False,
+                'error': f'Error adding team member: {str(e)}'
+            }
+    
+    async def remove_team_member(self, agent_name: str) -> Dict[str, Any]:
+        """
+        Dynamically remove a team member agent.
+        
+        Args:
+            agent_name: Name of the agent to remove
+            
+        Returns:
+            Dict containing the result of removing the agent
+        """
+        try:
+            if agent_name not in self.agent_connections:
+                return {
+                    'success': False,
+                    'error': f'Agent {agent_name} not found'
+                }
+            
+            # Check if this is a configured (non-dynamic) agent
+            if agent_name not in self._dynamic_agents:
+                return {
+                    'success': False,
+                    'error': f'Agent {agent_name} is a configured agent and cannot be removed dynamically'
+                }
+            
+            # Close connection
+            connection = self.agent_connections[agent_name]
+            try:
+                await connection.client.close()
+            except Exception as e:
+                logger.warning(f"Error closing connection for {agent_name}: {e}")
+            
+            # Remove from all tracking structures
+            del self.agent_connections[agent_name]
+            del self.agent_registry[agent_name]
+            self._dynamic_agents.discard(agent_name)
+            
+            logger.info(f"Successfully removed team member: {agent_name}")
+            return {
+                'success': True,
+                'agent_name': agent_name,
+                'message': f'Agent {agent_name} removed successfully'
+            }
+            
+        except Exception as e:
+            logger.error(f"Error removing team member {agent_name}: {e}")
+            return {
+                'success': False,
+                'error': f'Error removing team member: {str(e)}'
+            }
+    
+    async def list_team_members(self) -> Dict[str, Any]:
+        """
+        List all current team member agents.
+        
+        Returns:
+            Dict containing information about all team members
+        """
+        await self._ensure_connections()
+        
+        team_members = []
+        for name, info in self.agent_registry.items():
+            member_info = {
+                'name': name,
+                'description': info['description'],
+                'url': info['url'],
+                'streaming': info['streaming'],
+                'type': 'dynamic' if name in self._dynamic_agents else 'configured',
+                'status': 'connected' if name in self.agent_connections else 'disconnected'
+            }
+            
+            # Add timestamp for dynamic agents
+            if name in self._dynamic_agents and 'added_at' in info:
+                member_info['added_at'] = info['added_at']
+            
+            team_members.append(member_info)
+        
+        return {
+            'total_agents': len(team_members),
+            'configured_agents': len([m for m in team_members if m['type'] == 'configured']),
+            'dynamic_agents': len([m for m in team_members if m['type'] == 'dynamic']),
+            'connected_agents': len([m for m in team_members if m['status'] == 'connected']),
+            'team_members': team_members
+        }
+    
+    async def reconnect_team_member(self, agent_name: str) -> Dict[str, Any]:
+        """
+        Attempt to reconnect to a team member agent.
+        
+        Args:
+            agent_name: Name of the agent to reconnect
+            
+        Returns:
+            Dict containing the result of reconnecting
+        """
+        try:
+            if agent_name not in self.agent_registry:
+                return {
+                    'success': False,
+                    'error': f'Agent {agent_name} not found in registry'
+                }
+            
+            agent_url = self.agent_registry[agent_name]['url']
+            
+            # Close existing connection if any
+            if agent_name in self.agent_connections:
+                try:
+                    await self.agent_connections[agent_name].client.close()
+                except Exception:
+                    pass
+                del self.agent_connections[agent_name]
+            
+            # Attempt reconnection
+            logger.info(f"Attempting to reconnect to {agent_name} at {agent_url}")
+            connection = RemoteAgentConnection(agent_url)
+            
+            if await connection.connect():
+                self.agent_connections[agent_name] = connection
+                
+                # Update registry with latest info
+                self.agent_registry[agent_name].update({
+                    'description': connection.card.description,
+                    'streaming': connection.supports_streaming,
+                    'reconnected_at': datetime.now().isoformat()
+                })
+                
+                logger.info(f"Successfully reconnected to {agent_name}")
+                return {
+                    'success': True,
+                    'agent_name': agent_name,
+                    'message': f'Successfully reconnected to {agent_name}'
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': f'Failed to reconnect to {agent_name} at {agent_url}'
+                }
+                
+        except Exception as e:
+            logger.error(f"Error reconnecting to {agent_name}: {e}")
+            return {
+                'success': False,
+                'error': f'Error reconnecting: {str(e)}'
+            }
+    
+    async def get_team_member_info(self, agent_name: str) -> Dict[str, Any]:
+        """
+        Get detailed information about a specific team member.
+        
+        Args:
+            agent_name: Name of the agent
+            
+        Returns:
+            Dict containing detailed agent information
+        """
+        if agent_name not in self.agent_registry:
+            return {
+                'success': False,
+                'error': f'Agent {agent_name} not found'
+            }
+        
+        info = self.agent_registry[agent_name].copy()
+        info.update({
+            'success': True,
+            'type': 'dynamic' if agent_name in self._dynamic_agents else 'configured',
+            'status': 'connected' if agent_name in self.agent_connections else 'disconnected'
+        })
+        
+        # Add connection-specific info if connected
+        if agent_name in self.agent_connections:
+            connection = self.agent_connections[agent_name]
+            if connection.card:
+                info.update({
+                    'agent_card': {
+                        'name': connection.card.name,
+                        'description': connection.card.description,
+                        'version': connection.card.version,
+                        'capabilities': connection.card.capabilities
+                    }
+                })
+        
+        return info
+    
     async def cleanup(self):
         """Clean up agent connections."""
         for connection in self.agent_connections.values():
             try:
-                await connection.close()
+                await connection.client.close()
             except Exception as e:
                 logger.error(f"Error closing connection: {e}")
 
