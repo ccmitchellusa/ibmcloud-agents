@@ -14,13 +14,14 @@
 
 ## ❤️ Keeping it simple
 
-The common core of the agents is found in [`src/ibmcloud_base_agent/agent.py`](src/ibmcloud_base_agent/agent.py), which is a template for building other agents and has:
+The common core of the agents is found in [`src/common/ibm_cloud_base.py`](src/common/ibm_cloud_base.py), which provides the base logic for all agents. Agents are now defined primarily through **YAML configuration files** in `src/agents/`, which specify:
 
-- 🧠Model connection - OpenAI, Anthropic, LiteLLM, etc.
-- 🛠️IBMCloud MCP Server tool configuration for basic IBM Cloud commands to set target context and listing resource groups.
-- 🕵️Agent 📃instructions - System prompt that defines the agents core behavior
+- 🧠 Model connection and parameters
+- 🛠️ IBMCloud MCP Server tool configuration
+- 🕵️ Agent description and 📃 instructions
+- 🎩 Kingsmen metadata (codename, expertise)
 
-The **Supervisor Agent** is now the default agent that will appear when connecting to the server with a2a-cli (or other a2a client app), providing intelligent task delegation to specialized agents.
+The **Supervisor Agent** is the default agent that will appear when connecting to the server, providing intelligent task delegation.
 
 ## 📚 Documentation
 
@@ -90,11 +91,16 @@ Open browser on `http://localhost:8000/agent-card.json` to view card JSON. This 
 
 ## Install an A2A Client
 
+
 To connect to the agents over A2A protocol, you will need an A2A client.  The simplest A2A client which runs from the command line is  Chris Hay's [A2A CLI](https://github.com/chrishayuk/a2a-cli).  
 In a separate shell, issue the following command to install and run the a2a-cli and connect it to the running agents.
 
 ```bash
-uvx a2a-cli --server http://localhost:8000 chat
+# Connect to the Supervisor Agent (default)
+uvx a2a-cli --server http://localhost:8000/supervisor_agent chat
+
+# Connect to the Kingsmen
+uvx a2a-cli --server http://localhost:8000/kingsmen_agent chat
 ```
 
 # Understanding the Agent Architecture
@@ -130,6 +136,22 @@ The following specialized agents handle specific IBM Cloud domains:
 - **IBM Cloud Serverless Agent** - Code Engine and serverless computing
 - **IBM Cloud Account Admin Agent** - User management and IAM
 - **IBM Cloud Cloud Automation Agent** - Deployable architectures and automation
+
+### 🤖 Auto-Generated Agents
+
+In addition to the curated agents above, this project now includes **over 50 specialized agents** generated from the IBM Cloud MCP Server configurations. These agents provide dedicated support for specific IBM Cloud services, including:
+
+- **Compute**: VPC, PowerVS, Kubernetes, OpenShift, Code Engine
+- **Network**: Direct Link, Transit Gateway, CIS (Cloud Internet Services)
+- **Storage**: Cloud Object Storage, Block Storage, File Storage
+- **Management**: Global Search, Tagging, Resource Groups
+- **Observability**: Cloud Logs, Monitoring, Activity Tracker
+
+These agents are enhanced with:
+- **Codenames**: Unique identifiers (e.g., "Sentinel", "Admiral") for easier reference.
+- **Why/When Metadata**: "When to use" descriptions that help the Supervisor agent route requests accurately.
+
+You can find the full list of available agents in the [`src/agents/`](src/agents/) directory.
 
 # 🚀 Getting Started
 
@@ -225,12 +247,32 @@ You can also connect directly to specialized agents using the `/connect` command
 
 ## Implementation Details
 
-Each specialized agent extends the `IBMCloudBaseAgent` class and includes:
-- 🧠 **LLM Integration**: OpenAI, Anthropic, LiteLLM, and other providers via chuk-llm
-- 🛠️ **MCP Tools**: Specialized IBM Cloud MCP Server tools for each domain
-- 🕵️ **Expert Instructions**: Domain-specific system prompts and behavior patterns
-- 📊 **Session Management**: Optional session support for coordination agents
+Agents are dynamically loaded from YAML definitions in `src/agents/*.yaml`. Each definition instantiates an agent using the shared `IBMCloudBaseAgent` logic and includes:
+- 🧠 **LLM Integration**: Configured via YAML and environment variables
+- 🛠️ **MCP Tools**: Defined in YAML (pointing to MCP config files). Supports multiple MCP servers per agent.
+- 🕵️ **Expert Instructions**: Detailed system prompts in the YAML file
+- 📊 **Session Management**: Handled by the base agent infrastructure
+- 🎩 **Kingsmen Metadata**: Codename, expertise, and specialties for the Kingsmen roster
+- 🚦 **Concurrency Groups**: Sequential delegation support for agents sharing single-session resources (e.g., IBM Cloud MCP)
 - 🔄 **Fallback Handling**: Graceful degradation when MCP tools are unavailable
+
+- 🔄 **Fallback Handling**: Graceful degradation when MCP tools are unavailable
+
+### ⚙️ Generating Agents
+
+This repository includes scripts to automatically generate agent configurations from the source IBM Cloud MCP definitions. This ensures that agents always have the latest tool capabilities.
+
+To regenerate or update the agents:
+
+```bash
+# Generate agent YAMLs from MCP configs
+python3 scripts/generate_agents.py
+
+# Verify the generated agents
+python3 scripts/verify_agents.py
+```
+
+To add a new agent manually, simply add a new `.yaml` file to `src/agents/`.
 
 ## 📦Containerization
 

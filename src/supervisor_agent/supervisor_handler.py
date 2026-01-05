@@ -22,14 +22,14 @@ from a2a_json_rpc.spec import (
     TextPart
 )
 
-from ..common.simple_a2a_client import (
+from common.simple_a2a_client import (
     RemoteAgentConnection,
     TaskRequest,
     Message as ClientMessage,
     TaskState as ClientTaskState
 )
 
-from litellm import acompletion
+from chuk_llm.llm.providers.openai_client import OpenAILLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +66,9 @@ class SupervisorHandler(ResilientHandler):
         
         # Configure model
         self.model = model or os.getenv('SUPERVISOR_MODEL', 'gpt-4o-mini')
+        
+        # Initialize LLM client
+        self.llm_client = OpenAILLMClient(model=self.model)
         
         # Get agent URLs from parameter, YAML config, or environment
         if agent_urls:
@@ -128,6 +131,9 @@ class SupervisorHandler(ResilientHandler):
         # Track which agents were added dynamically vs configured at startup
         self._dynamic_agents: set[str] = set()
         self._configured_urls: List[str] = self.agent_urls.copy()
+        
+        # Concurrency management
+        self._concurrency_locks: Dict[str, asyncio.Lock] = {}
     
     async def _ensure_connections(self):
         """Ensure agent connections are initialized."""
@@ -151,8 +157,17 @@ class SupervisorHandler(ResilientHandler):
                         'name': agent_name,
                         'description': connection.card.description,
                         'url': url,
-                        'streaming': connection.supports_streaming
+                        'streaming': connection.supports_streaming,
+                        'capabilities': connection.card.capabilities
                     }
+                    
+                    # Initialize lock for concurrency group if needed
+                    concurrency_group = connection.card.capabilities.get('concurrency_group')
+                    if concurrency_group and concurrency_group not in self._concurrency_locks:
+                        self._concurrency_locks[concurrency_group] = asyncio.Lock()
+                    
+                    if concurrency_group:
+                        logger.info(f"Agent {agent_name} assigned to concurrency group: {concurrency_group}")
                     logger.info(f"Successfully connected to agent: {agent_name}")
                 else:
                     logger.warning(f"Failed to connect to agent at {url}")
@@ -206,11 +221,7 @@ class SupervisorHandler(ResilientHandler):
             yield TaskStatusUpdateEvent(
                 task_id=task_id,
                 status=TaskStatus(
-                    state=TaskState.RUNNING,
-                    message=Message(
-                        role="assistant",
-                        parts=[TextPart(text="Analyzing your request...")]
-                    )
+                    state=TaskState.working
                 )
             )
             
@@ -227,27 +238,21 @@ class SupervisorHandler(ResilientHandler):
             selected_agent = await self._select_agent(user_text, history)
             
             if not selected_agent:
+                logger.warning("No suitable agent available")
                 yield TaskStatusUpdateEvent(
                     task_id=task_id,
                     status=TaskStatus(
-                        state=TaskState.FAILED,
-                        message=Message(
-                            role="assistant",
-                            parts=[TextPart(text="No suitable agent available to handle this request.")]
-                        )
+                        state=TaskState.failed
                     )
                 )
                 return
             
             # Notify user which agent is handling the request
             yield TaskStatusUpdateEvent(
+                id=str(uuid.uuid4()),
                 task_id=task_id,
                 status=TaskStatus(
-                    state=TaskState.RUNNING,
-                    message=Message(
-                        role="assistant",
-                        parts=[TextPart(text=f"Delegating to {selected_agent} agent...")]
-                    )
+                    state=TaskState.working
                 )
             )
             
@@ -258,13 +263,10 @@ class SupervisorHandler(ResilientHandler):
         except Exception as e:
             logger.error(f"Error processing task {task_id}: {e}")
             yield TaskStatusUpdateEvent(
+                id=str(uuid.uuid4()),
                 task_id=task_id,
                 status=TaskStatus(
-                    state=TaskState.FAILED,
-                    message=Message(
-                        role="assistant",
-                        parts=[TextPart(text=f"Error: {str(e)}")]
-                    )
+                    state=TaskState.failed
                 )
             )
     
@@ -295,7 +297,14 @@ class SupervisorHandler(ResilientHandler):
         # Build agent descriptions
         agent_list = []
         for name, info in self.agent_registry.items():
-            agent_list.append(f"- {name}: {info['description']}")
+            desc = info['description']
+            capabilities = info.get('capabilities', {})
+            when_to_use = capabilities.get('when_to_use')
+            
+            if when_to_use:
+                agent_list.append(f"- {name}: {desc}\n  When to use: {when_to_use}")
+            else:
+                agent_list.append(f"- {name}: {desc}")
         
         agents_description = "\n".join(agent_list)
         
@@ -319,17 +328,15 @@ If no agent is suitable, respond with 'none'."""
         
         try:
             # Use LLM to select agent
-            response = await acompletion(
-                model=self.model,
+            response = await self.llm_client.create_completion(
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_text}
-                ],
-                temperature=0.1,
-                max_tokens=50
+                ]
             )
             
-            selected = response.choices[0].message.content.strip().lower()
+            # Response is a dict like {'response': 'text', 'tool_calls': []}
+            selected = response.get('response', '').strip().lower()
             
             # Validate the selection
             for agent_name in self.agent_connections.keys():
@@ -372,14 +379,12 @@ If no agent is suitable, respond with 'none'."""
         """
         connection = self.agent_connections.get(agent_name)
         if not connection:
+            logger.warning(f"Agent {agent_name} is not available")
             yield TaskStatusUpdateEvent(
+                id=str(uuid.uuid4()),
                 task_id=task_id,
                 status=TaskStatus(
-                    state=TaskState.FAILED,
-                    message=Message(
-                        role="assistant",
-                        parts=[TextPart(text=f"Agent {agent_name} is not available")]
-                    )
+                    state=TaskState.failed
                 )
             )
             return
@@ -396,6 +401,19 @@ If no agent is suitable, respond with 'none'."""
         )
         
         try:
+            # Determine concurrency group
+            concurrency_group = None
+            if self.agent_registry.get(agent_name):
+                capabilities = self.agent_registry[agent_name].get('capabilities', {})
+                concurrency_group = capabilities.get('concurrency_group')
+                
+            lock = self._concurrency_locks.get(concurrency_group) if concurrency_group else None
+            
+            if lock:
+                logger.info(f"Waiting for lock on concurrency group: {concurrency_group}")
+                await lock.acquire()
+                logger.debug(f"Acquired lock on concurrency group: {concurrency_group}")
+                
             if connection.supports_streaming:
                 # Stream response from agent
                 async for event in connection.send_task_streaming(request):
@@ -405,21 +423,11 @@ If no agent is suitable, respond with 'none'."""
                         if 'status' in result:
                             status = result['status']
                             
-                            # Convert message if present
-                            message_obj = None
-                            if 'message' in status and status['message']:
-                                msg_content = status['message'].get('content', '')
-                                if msg_content:
-                                    message_obj = Message(
-                                        role="assistant",
-                                        parts=[TextPart(text=msg_content)]
-                                    )
-                            
                             yield TaskStatusUpdateEvent(
+                                id=str(uuid.uuid4()),
                                 task_id=task_id,
                                 status=TaskStatus(
-                                    state=TaskState.RUNNING if not event.get('final') else TaskState.COMPLETED,
-                                    message=message_obj
+                                    state=TaskState.working if not event.get('final') else TaskState.completed
                                 )
                             )
                     
@@ -430,29 +438,20 @@ If no agent is suitable, respond with 'none'."""
                 response = await connection.send_task(request)
                 
                 if response.state == ClientTaskState.FAILED:
+                    logger.error(f"Task failed: {response.error}")
                     yield TaskStatusUpdateEvent(
+                        id=str(uuid.uuid4()),
                         task_id=task_id,
                         status=TaskStatus(
-                            state=TaskState.FAILED,
-                            message=Message(
-                                role="assistant",
-                                parts=[TextPart(text=response.error or "Task failed")]
-                            )
+                            state=TaskState.failed
                         )
                     )
                 else:
-                    message_obj = None
-                    if response.message:
-                        message_obj = Message(
-                            role="assistant",
-                            parts=[TextPart(text=response.message.content)]
-                        )
-                    
                     yield TaskStatusUpdateEvent(
+                        id=str(uuid.uuid4()),
                         task_id=task_id,
                         status=TaskStatus(
-                            state=TaskState.COMPLETED,
-                            message=message_obj
+                            state=TaskState.completed
                         )
                     )
             
@@ -469,15 +468,15 @@ If no agent is suitable, respond with 'none'."""
         except Exception as e:
             logger.error(f"Error delegating to {agent_name}: {e}")
             yield TaskStatusUpdateEvent(
-                task_id=task_id,
+                id=task_id,
                 status=TaskStatus(
-                    state=TaskState.FAILED,
-                    message=Message(
-                        role="assistant",
-                        parts=[TextPart(text=f"Error delegating to {agent_name}: {str(e)}")]
-                    )
+                    state=TaskState.failed
                 )
             )
+        finally:
+            if lock:
+                lock.release()
+                logger.debug(f"Released lock on concurrency group: {concurrency_group}")
     
     async def add_team_member(self, agent_url: str, agent_name: Optional[str] = None) -> Dict[str, Any]:
         """

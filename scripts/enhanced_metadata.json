@@ -1,0 +1,194 @@
+{
+    "ibmcloud_cbr_cbr_agent": {
+        "when_to_use": "Use when configuring Context-Based Restrictions (CBR) to secure cloud resources. Scenarios include defining network zones, creating rules to restrict access based on IP or service, and auditing existing restrictions.",
+        "codename": "Sentinel"
+    },
+    "ibmcloud_cloud_automation_iac_agent": {
+        "when_to_use": "Use for Infrastructure as Code (IaC) operations using IBM Cloud Schematics. Scenarios include creating and applying Terraform workspaces, managing state files, and automating resource provisioning.",
+        "codename": "Architect"
+    },
+    "ibmcloud_cloud_internet_services_cis_waf_agent": {
+        "when_to_use": "Use for managing Web Application Firewall (WAF) settings in Cloud Internet Services (CIS). Scenarios include enabling/disabling WAF rules, analyzing threat logs, and configuring security levels.",
+        "codename": "Aegis"
+    },
+    "ibmcloud_cloud_internet_services_cis_edge_func_agent": {
+        "when_to_use": "Use for managing Edge Functions in CIS. Scenarios include deploying serverless scripts to the edge, managing triggers, and optimizing content delivery logic.",
+        "codename": "Vanguard"
+    },
+    "ibmcloud_cloud_internet_services_cis_alerts_agent": {
+        "when_to_use": "Use for configuring CIS alerts. Scenarios include setting up notifications for DDoS attacks, origin failures, or other critical events.",
+        "codename": "Siren"
+    },
+    "ibmcloud_cloud_internet_services_cis_custom_pages_agent": {
+        "when_to_use": "Use for managing custom error pages in CIS. Scenarios include uploading custom HTML for 404 or 500 errors to maintain branding during outages.",
+        "codename": "Canvas"
+    },
+    "ibmcloud_cloud_internet_services_cis_glb_agent": {
+        "when_to_use": "Use for Global Load Balancer (GLB) management in CIS. Scenarios include configuring origin pools, setting up health checks, and defining traffic steering policies.",
+        "codename": "Balancer"
+    },
+    "ibmcloud_cloud_internet_services_cis_dns_agent": {
+        "when_to_use": "Use for DNS management within CIS. Scenarios include adding, updating, or listing DNS records, configuring DNS security (DNSSEC), and managing domain names.",
+        "codename": "Navigator"
+    },
+    "ibmcloud_cloud_internet_services_cis_agent": {
+        "when_to_use": "Use for general CIS instance management. Scenarios include provisioning new CIS instances, updating plan levels, and managing general settings.",
+        "codename": "Gatekeeper"
+    },
+    "ibmcloud_cloud_internet_services_cis_access_agent": {
+        "when_to_use": "Use for managing access controls within CIS. Scenarios include configuring IP access rules, user agent blocking, and zone lockdown settings.",
+        "codename": "Bouncer"
+    },
+    "ibmcloud_cloud_internet_services_cis_firewall_agent": {
+        "when_to_use": "Use for configuring firewall rules in CIS. Scenarios include creating rule sets to block malicious traffic and defining filter logic based on request properties.",
+        "codename": "Wall"
+    },
+    "ibmcloud_cloud_internet_services_cis_certs_agent": {
+        "when_to_use": "Use for SSL/TLS certificate management in CIS. Scenarios include ordering dedicated certificates, managing universal SSL settings, and uploading custom certificates.",
+        "codename": "Certifier"
+    },
+    "ibmcloud_cloud_internet_services_cis_rate_limiting_agent": {
+        "when_to_use": "Use for configuring rate limiting rules in CIS. Scenarios include protecting APIS and login pages from brute force attacks by limiting request rates.",
+        "codename": "Throttle"
+    },
+    "ibmcloud_cloud_internet_services_cis_routing_agent": {
+        "when_to_use": "Use for advanced routing configurations in CIS. Scenarios include setting up page rules and smart routing features.",
+        "codename": "Router"
+    },
+    "ibmcloud_cloud_internet_services_cis_logs_agent": {
+        "when_to_use": "Use for accessing and configuring Logpush jobs in CIS. Scenarios include streaming logs to cloud storage or SIEM tools for analysis.",
+        "codename": "Stream"
+    },
+    "ibmcloud_core_dev_agent": {
+        "when_to_use": "Use for developer-centric account tasks. Scenarios include checking resource quotas, basic service binding, and development environment setup.",
+        "codename": "Workshop"
+    },
+    "ibmcloud_core_config_agent": {
+        "when_to_use": "Use for managing CLI and API endpoint configurations. Scenarios include targeting regions, resource groups, and updating plugin settings.",
+        "codename": "Control"
+    },
+    "ibmcloud_core_resource_manager_agent": {
+        "when_to_use": "Use for managing Resource Groups and generic resource instances. Scenarios include listing all resources in a group, creating new resource groups, and reclaiming resources.",
+        "codename": "Steward"
+    },
+    "ibmcloud_core_iam_policy_agent": {
+        "when_to_use": "Use for managing IAM access policies. Scenarios include assigning access roles (Viewer, Editor, Administrator) to users or service IDs for specific resources.",
+        "codename": "PolicyMaker"
+    },
+    "ibmcloud_core_private_catalogs_agent": {
+        "when_to_use": "Use for managing private catalogs. Scenarios include adding software products to a private catalog, managing versions, and controlling visibility.",
+        "codename": "Curator"
+    },
+    "ibmcloud_core_billing_agent": {
+        "when_to_use": "Use for billing and usage inquiries. Scenarios include checking current month usage, retrieving past invoices, and analyzing spending trends.",
+        "codename": "Ledger"
+    },
+    "ibmcloud_core_assist_agent": {
+        "when_to_use": "Use for general assistance and documentation search. Scenarios include finding commands, understanding error messages, and retrieving best practice guides.",
+        "codename": "Guide"
+    },
+    "ibmcloud_core_account_agent": {
+        "when_to_use": "Use for account-level administration. Scenarios include managing organizations, spaces, and viewing account details (excluding IAM).",
+        "codename": "Admin"
+    },
+    "ibmcloud_core_iam_service_agent": {
+        "when_to_use": "Use for managing Service IDs and API Keys. Scenarios include creating Service IDs for applications, generating and rotating API keys.",
+        "codename": "Keymaster"
+    },
+    "ibmcloud_core_iam_trusted_profile_agent": {
+        "when_to_use": "Use for managing Trusted Profiles. Scenarios include setting up trusted profiles for compute resources to access APIs without long-lived keys.",
+        "codename": "Trustee"
+    },
+    "ibmcloud_core_iam_access_agent": {
+        "when_to_use": "Use for managing user access groups. Scenarios include creating access groups, adding members, and assigning dynamic rules.",
+        "codename": "Membership"
+    },
+    "ibmcloud_core_catalog_agent": {
+        "when_to_use": "Use for interacting with the IBM Cloud Catalog. Scenarios include searching for services, listing available plans, and retrieving service details.",
+        "codename": "Shopper"
+    },
+    "ibmcloud_powervs_powervs_agent": {
+        "when_to_use": "Use for managing Power Systems Virtual Servers. Scenarios include provisioning PowerVS instances, managing storage volumes, and configuring networks.",
+        "codename": "Powerhouse"
+    },
+    "ibmcloud_serverless_code_engine_agent": {
+        "when_to_use": "Use for general Code Engine project management. Scenarios include creating projects, managing secrets/configmaps, and viewing project status.",
+        "codename": "Engine"
+    },
+    "ibmcloud_serverless_code_engine_functions_agent": {
+        "when_to_use": "Use for Code Engine Functions. Scenarios include deploying event-driven snippets of code, managing function revisions, and binding triggers.",
+        "codename": "Spark"
+    },
+    "ibmcloud_serverless_code_engine_apps_agent": {
+        "when_to_use": "Use for Code Engine Applications. Scenarios include deploying containerized apps, scaling settings, and managing application routes.",
+        "codename": "Runner"
+    },
+    "ibmcloud_serverless_code_engine_jobs_agent": {
+        "when_to_use": "Use for Code Engine Jobs. Scenarios include submitting batch jobs, checking job run status, and managing job definitions.",
+        "codename": "Batch"
+    },
+    "ibmcloud_cloudlogs_logs_agent": {
+        "when_to_use": "Use for managing IBM Cloud Logs instances. Scenarios include provisioning logging instances, configuring log ingestion, and setting up retention policies.",
+        "codename": "Recorder"
+    },
+    "ibmcloud_event_notifications_event_notifications_agent": {
+        "when_to_use": "Use for Event Notifications. Scenarios include creating topics, configuring destinations (email, webhook), and sending test notifications.",
+        "codename": "Herald"
+    },
+    "ibmcloud_object_storage_cos_agent": {
+        "when_to_use": "Use for Cloud Object Storage (COS). Scenarios include creating buckets, listing objects, configuring bucket lifecycles, and managing CORS settings.",
+        "codename": "Vault"
+    },
+    "ibmcloud_container_registry_cr_agent": {
+        "when_to_use": "Use for Container Registry (ICR). Scenarios include listing container images, managing namespaces, and checking vulnerability reports.",
+        "codename": "Harbor"
+    },
+    "ibmcloud_vpc_vpc_baremetal_agent": {
+        "when_to_use": "Use for managing VPC Bare Metal Servers. Scenarios include provisioning dedicated hosts, managing network interfaces, and controlling server power state.",
+        "codename": "Titan"
+    },
+    "ibmcloud_vpc_vpc_network_agent": {
+        "when_to_use": "Use for VPC Networking components. Scenarios include managing subnets, Public Gateways, Floating IPs, Security Groups, and NACLs.",
+        "codename": "Grid"
+    },
+    "ibmcloud_vpc_vpc_backup_agent": {
+        "when_to_use": "Use for VPC Backup policies. Scenarios include creating backup plans for storage volumes and managing snapshots.",
+        "codename": "Safety"
+    },
+    "ibmcloud_vpc_vpc_volume_agent": {
+        "when_to_use": "Use for Block Storage volumes in VPC. Scenarios include creating/deleting volumes, expanding storage, and attaching volumes to instances.",
+        "codename": "Depot"
+    },
+    "ibmcloud_vpc_vpc_cluster_agent": {
+        "when_to_use": "Use for managing VPC interactions with Kubernetes clusters. Scenarios include specific VPC infrastructure tasks related to cluster networking.",
+        "codename": "Orchestrator"
+    },
+    "ibmcloud_vpc_vpc_sec_agent": {
+        "when_to_use": "Use for VPC Security settings. Scenarios include managing strict security groups, dedicate host groups, and encryption keys.",
+        "codename": "Shield"
+    },
+    "ibmcloud_vpc_vpc_lb_agent": {
+        "when_to_use": "Use for VPC Load Balancers. Scenarios include provisioning Application or Network Load Balancers, defining pools, and managing listeners.",
+        "codename": "Balance"
+    },
+    "ibmcloud_vpc_vpc_instance_agent": {
+        "when_to_use": "Use for managing Virtual Server Instances (VSI) in VPC. Scenarios include provisioning instances, stopping/starting servers, resizing profiles, and troubleshooting instance health.",
+        "codename": "Compute"
+    },
+    "ibmcloud_monitoring_monitor_agent": {
+        "when_to_use": "Use for IBM Cloud Monitoring. Scenarios include managing monitoring instances, configuring dashboards, and setting up alerts.",
+        "codename": "Watchtower"
+    },
+    "ibmcloud_kubernetes_ks_agent": {
+        "when_to_use": "Use for managing Kubernetes config and basics. Scenarios include retrieving cluster context, checking basic cluster status, and updating versions.",
+        "codename": "Helmsman"
+    },
+    "ibmcloud_kubernetes_ks_full_agent": {
+        "when_to_use": "Use for comprehensive Kubernetes/OpenShift management. Scenarios include creating clusters, managing worker pools, installing add-ons, and detailed cluster diagnostics.",
+        "codename": "Admiral"
+    },
+    "ibmcloud_event_streams_event_streams_agent": {
+        "when_to_use": "Use for Event Streams (Kafka). Scenarios include creating topics, managing consumer groups, and monitoring message throughput.",
+        "codename": "Flow"
+    }
+}

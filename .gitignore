@@ -28,6 +28,7 @@ node_modules/
 mcp.db-journal
 certs/
 FIXMEs
+*_agent.json
 *.old
 logs/
 *.log

@@ -34,8 +34,7 @@ def main():
     # Create the FastAPI app with the handler
     app = create_app(
         handlers=[handler],
-        title="Supervisor Agent",
-        description="A2A Supervisor agent that delegates tasks to specialized agents"
+        handlers_config={}
     )
     
     # Add team management routes

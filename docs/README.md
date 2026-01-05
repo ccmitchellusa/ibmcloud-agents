@@ -32,6 +32,10 @@ Welcome to the documentation for the IBM Cloud Agents project. This collection p
 - **🤖 Supervisor Agent** (`supervisor_agent`) - Intelligent task delegation
 - **🎩 Kingsmen Agent** (`kingsmen_agent`) - Elite themed team coordination
 
+### Auto-Generated Agents
+- **⚡️ Service Specific Agents** - Over 50+ specialized agents for individual IBM Cloud services (e.g., `ibmcloud_vpc_vpc_agent`, `ibmcloud_cos_object_storage_agent`).
+- Each comes with specific "When to use" routing metadata and unique codenames.
+
 ## 📖 Tutorials
 
 ### Getting Started

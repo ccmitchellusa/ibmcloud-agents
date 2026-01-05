@@ -1,5 +1,5 @@
 """
-Kingsmen Agent Handler - Elite IBM Cloud Operations Team
+Kingsmen Agent Handler - Elite IBM Cloud Operations Team.
 
 The Kingsmen agent creates a specialized team of IBM Cloud agents,
 each with specific roles and expertise areas. Like the elite spy organization,
@@ -7,11 +7,13 @@ each agent has a codename and specialized skills.
 """
 
 import os
+import glob
 import logging
+import yaml
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 
-from ..supervisor_agent.supervisor_handler import SupervisorHandler
+from supervisor_agent.supervisor_handler import SupervisorHandler
 
 logger = logging.getLogger(__name__)
 
@@ -35,50 +37,6 @@ class KingsmenHandler(SupervisorHandler):
     and specific area of expertise within IBM Cloud operations.
     """
     
-    # Elite team roster with codenames and specializations
-    KINGSMEN_ROSTER = [
-        KingsmanAgent(
-            codename="Galahad",
-            real_name="ibmcloud_base_agent", 
-            url="http://localhost:8000/ibmcloud_base_agent",
-            expertise="Foundation & Infrastructure",
-            description="The foundation specialist who handles core IBM Cloud resources and infrastructure management",
-            specialties=["resource_groups", "service_instances", "targets", "basic_operations"]
-        ),
-        KingsmanAgent(
-            codename="Lancelot",
-            real_name="ibmcloud_account_admin_agent",
-            url="http://localhost:8000/ibmcloud_account_admin_agent", 
-            expertise="Security & Access Control",
-            description="The security expert who manages accounts, users, and access policies with precision",
-            specialties=["user_management", "iam_policies", "access_groups", "service_ids", "api_keys"]
-        ),
-        KingsmanAgent(
-            codename="Percival",
-            real_name="ibmcloud_serverless_agent",
-            url="http://localhost:8000/ibmcloud_serverless_agent",
-            expertise="Serverless & Modern Applications", 
-            description="The modernization specialist focused on serverless computing and cloud-native applications",
-            specialties=["code_engine", "functions", "serverless_apps", "container_deployments"]
-        ),
-        KingsmanAgent(
-            codename="Gareth",
-            real_name="ibmcloud_guide_agent",
-            url="http://localhost:8000/ibmcloud_guide_agent",
-            expertise="Strategy & Best Practices",
-            description="The strategic advisor who provides guidance, best practices, and architectural recommendations",
-            specialties=["best_practices", "architecture_guidance", "service_recommendations", "troubleshooting"]
-        ),
-        KingsmanAgent(
-            codename="Tristan", 
-            real_name="ibmcloud_cloud_automation_agent",
-            url="http://localhost:8000/ibmcloud_cloud_automation_agent",
-            expertise="Automation & DevOps",
-            description="The automation expert who handles deployable architectures, projects, and infrastructure as code",
-            specialties=["deployable_architectures", "projects", "schematics", "terraform", "automation_pipelines"]
-        )
-    ]
-    
     def __init__(
         self,
         agent=None,
@@ -86,6 +44,7 @@ class KingsmenHandler(SupervisorHandler):
         model: Optional[str] = None,
         team_environment: str = "localhost",
         custom_roster: Optional[List[KingsmanAgent]] = None,
+        base_url_template: str = "http://localhost:8000/{agent_name}",
         **kwargs
     ):
         """
@@ -97,12 +56,16 @@ class KingsmenHandler(SupervisorHandler):
             model: LLM model for coordination
             team_environment: Environment for team deployment (localhost, staging, prod)
             custom_roster: Override default roster with custom agents
+            base_url_template: Template for constructing agent URLs
             **kwargs: Additional configuration
         """
         
         # Configure the team based on environment
         self.team_environment = team_environment
-        self.roster = custom_roster or self.KINGSMEN_ROSTER
+        self.base_url_template = base_url_template
+        
+        # Load roster dynamically if not customized
+        self.roster = custom_roster or self._load_roster_from_yaml()
         
         # Build agent URLs from roster
         agent_urls = [agent.url for agent in self.roster]
@@ -123,6 +86,42 @@ class KingsmenHandler(SupervisorHandler):
         for agent in self.roster:
             logger.info(f"  - {agent.codename} ({agent.real_name}): {agent.expertise}")
     
+    def _load_roster_from_yaml(self) -> List[KingsmanAgent]:
+        """
+        Load the Kingsmen roster from agent YAML files.
+        Scanning src/agents/*.yaml for 'kingsman' metadata.
+        """
+        roster = []
+        # Path to agents directory - assuming relative to this file
+        # src/kingsmen_agent/kingsmen_handler.py -> src/agents
+        agents_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "agents")
+        yaml_files = glob.glob(os.path.join(agents_dir, "*.yaml"))
+        
+        for yaml_path in yaml_files:
+            try:
+                with open(yaml_path, 'r') as f:
+                    data = yaml.safe_load(f)
+                
+                # Check if this agent is a Kingsman
+                if 'kingsman' in data:
+                    k_data = data['kingsman']
+                    agent_name = data.get('name', os.path.splitext(os.path.basename(yaml_path))[0])
+                    
+                    agent = KingsmanAgent(
+                        codename=k_data.get('codename', 'Unknown'),
+                        real_name=agent_name,
+                        url=self.base_url_template.format(agent_name=agent_name),
+                        expertise=k_data.get('expertise', ''),
+                        description=k_data.get('description', ''),
+                        specialties=k_data.get('specialties', [])
+                    )
+                    roster.append(agent)
+                    logger.debug(f"Recruited Kingsman {agent.codename} from {yaml_path}")
+            except Exception as e:
+                logger.warning(f"Failed to load Kingsman metadata from {yaml_path}: {e}")
+                
+        return roster
+
     def _build_kingsmen_registry(self):
         """Build enhanced agent registry with Kingsmen-specific information."""
         # This will be populated when agents connect, but we can pre-populate known info
@@ -155,6 +154,8 @@ class KingsmenHandler(SupervisorHandler):
         # Build enhanced agent descriptions with Kingsmen details
         agent_descriptions = []
         for kingsman in self.roster:
+            # Check if agent is connected OR if we are in a mode where checking connection is difficult?
+            # Ideally we only select connected agents
             if kingsman.real_name in self.agent_connections:
                 specialties_str = ", ".join(kingsman.specialties)
                 agent_descriptions.append(
@@ -175,31 +176,20 @@ Your team of agents:
 Analyze the user's request and respond with ONLY the agent name (not codename) that should handle it.
 Do not include any explanation, just the agent name.
 
-Selection Guidelines:
-- For basic IBM Cloud operations and resource management → ibmcloud_base_agent (Galahad)
-- For account administration, users, IAM, security → ibmcloud_account_admin_agent (Lancelot)
-- For serverless, Code Engine, modern applications → ibmcloud_serverless_agent (Percival)
-- For guidance, best practices, recommendations → ibmcloud_guide_agent (Gareth)
-- For automation, deployable architectures, projects → ibmcloud_cloud_automation_agent (Tristan)
-
 Choose the Kingsman whose expertise best matches the user's request.
 If no agent is suitable, respond with 'none'."""
         
         try:
             # Use LLM with enhanced Kingsmen context
-            from litellm import acompletion
             
-            response = await acompletion(
-                model=self.model,
+            response = await self.llm_client.create_completion(
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_text}
-                ],
-                temperature=0.1,
-                max_tokens=50
+                ]
             )
             
-            selected = response.choices[0].message.content.strip().lower()
+            selected = response.get('response', '').strip().lower()
             
             # Validate the selection
             for agent_name in self.agent_connections.keys():
@@ -210,10 +200,11 @@ If no agent is suitable, respond with 'none'."""
                         logger.info(f"Arthur selected {kingsman.codename} ({agent_name}) for this mission")
                     return agent_name
             
-            if selected != 'none':
+            if selected != 'none' and selected != '':
                 logger.warning(f"Arthur selected unknown agent: {selected}")
             
-            # Default to Galahad (base agent) if available
+            # Default fallback logic if LLM fails to pick a valid connected agent
+            # Try to find 'ibmcloud_base_agent' if available
             if 'ibmcloud_base_agent' in self.agent_connections:
                 logger.info("Arthur defaulting to Galahad (ibmcloud_base_agent) for this mission")
                 return 'ibmcloud_base_agent'
@@ -258,49 +249,28 @@ If no agent is suitable, respond with 'none'."""
             KingsmanAgent if found, None otherwise
         """
         return next((agent for agent in self.roster if agent.codename.lower() == codename.lower()), None)
-    
+
     @classmethod
     def create_development_team(cls, **kwargs) -> 'KingsmenHandler':
         """
         Factory method to create a Kingsmen team for development environment.
-        
-        Returns:
-            Configured KingsmenHandler for development
         """
         return cls(
             name="kingsmen_dev_team",
             team_environment="development",
+            base_url_template="http://localhost:8000/{agent_name}",
             **kwargs
         )
-    
+
     @classmethod
     def create_production_team(cls, base_url: str = "https://agents.prod.example.com", **kwargs) -> 'KingsmenHandler':
         """
         Factory method to create a Kingsmen team for production environment.
-        
-        Args:
-            base_url: Base URL for production agents
-            
-        Returns:
-            Configured KingsmenHandler for production
         """
-        # Create production roster with custom URLs
-        prod_roster = []
-        for agent in cls.KINGSMEN_ROSTER:
-            prod_agent = KingsmanAgent(
-                codename=agent.codename,
-                real_name=agent.real_name,
-                url=f"{base_url}/{agent.real_name}",
-                expertise=agent.expertise,
-                description=agent.description,
-                specialties=agent.specialties
-            )
-            prod_roster.append(prod_agent)
-        
         return cls(
             name="kingsmen_prod_team",
-            team_environment="production", 
-            custom_roster=prod_roster,
+            team_environment="production",
+            base_url_template=f"{base_url}/{{agent_name}}",
             **kwargs
         )
 

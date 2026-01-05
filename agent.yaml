@@ -39,7 +39,7 @@ handlers:
 
   ibmcloud_base_agent:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
-    agent: ibmcloud_base_agent.agent.root_agent
+    agent: src.agents.ibmcloud_base_agent
     name: ibmcloud_base_agent
 
     # Handler-level session configuration
@@ -97,7 +97,7 @@ handlers:
             - 🗣️ "List the service instances in my account."
   ibmcloud_serverless_agent:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
-    agent: ibmcloud_serverless_agent.agent.root_agent
+    agent: src.agents.ibmcloud_serverless_agent
     name: ibmcloud_serverless_agent
 
     # Handler-level session configuration
@@ -172,7 +172,7 @@ handlers:
             - 🗣️ "Set the monitoring interval to 10 minutes."
   ibmcloud_guide_agent:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
-    agent: ibmcloud_guide_agent.agent.root_agent
+    agent: src.agents.ibmcloud_guide_agent
     name: ibmcloud_guide_agent
 
     # Handler-level session configuration
@@ -233,7 +233,7 @@ handlers:
 
   ibmcloud_account_admin_agent:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
-    agent: ibmcloud_account_admin_agent.agent.create_account_admin_agent
+    agent: src.agents.ibmcloud_account_admin_agent
     name: ibmcloud_account_admin_agent
 
     # Handler-level session configuration
@@ -310,7 +310,7 @@ handlers:
             - 🗣️ Delete the access group, `ACCESS_GROUP` name
   ibmcloud_cloud_automation_agent:
     type: a2a_server.tasks.handlers.chuk.chuk_agent_handler.AgentHandler
-    agent: ibmcloud_cloud_automation_agent.agent.root_agent
+    agent: src.agents.ibmcloud_cloud_automation_agent
     name: ibmcloud_cloud_automation_agent
     agent_card:
       name: IBM Cloud Cloud Automation ⚙️ Agent
