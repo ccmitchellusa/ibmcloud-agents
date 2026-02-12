@@ -1,0 +1,22 @@
+@use '@carbon/react/scss/breakpoint';
+
+@use '../globals' as g;
+
+.docs-page-container-row {
+  &__readme {
+    order: 1;
+  }
+  &__toc {
+    order: 2;
+  }
+
+  @include breakpoint.breakpoint-down(g.$mobile-breakpoint) {
+    &__readme {
+      order: 2;
+    }
+    &__toc {
+      order: 1;
+      padding: 1rem;
+    }
+  }
+}

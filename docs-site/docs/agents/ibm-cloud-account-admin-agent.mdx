@@ -1,0 +1,28 @@
+---
+title: 'Account Admin Agent'
+draft: true
+---
+
+# IBM Cloud Account Admin Agent
+
+Next switch to the **Account Admin agent**:
+
+```bash
+/connect http://localhost:8000/ibmcloud_account_admin_agent
+```
+![Account Admin's Agent Card](../images/account_admin_agent_card.png)
+
+and ask
+
+```text
+What can you help me with?
+```
+
+You will see various management tasks for working with IBM Cloud accounts, users and IAM access policies and groups for users and services.  Try listing the users in your account (your agent will need an API Key with Admin access for this, and most of the capabilities of this agent).
+
+## 🕵🏼‍♂️ Serverless Computing Agent Example
+An example specialized agent for Serverless computing using Code Engine is found in `ibmcloud_serverless_agent/agent.py`, which has:
+
+- 🧠LLM connection - LiteLLM
+- 🛠️IBMCloud MCP Server tool configuration for Code Engine-related tasks
+- 🕵️Agent 📃instructions for Serverless computing on IBM Cloud.

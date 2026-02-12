@@ -1,0 +1,98 @@
+@use '@carbon/react/scss/config' with (
+  $use-akamai-cdn: true // pull fonts from akamai
+);
+
+@use '@carbon/react/scss/spacing';
+@use '@carbon/react/scss/type';
+@use '@carbon/react/scss/breakpoint';
+@use '@carbon/react/scss/themes';
+@use '@carbon/react/scss/themes' as *;
+@use '@carbon/react/scss/theme';
+@use '@carbon/styles';
+
+@use '@carbon/react';
+
+@use '@carbon/ibm-products/css/index';
+
+// Imported styles.
+@use './blocks/main-header';
+@use './blocks/breadcrumbs';
+@use './blocks/agent-card';
+@use './blocks/toc';
+@use './blocks/docs-page-container';
+@use './blocks/footer';
+
+// Root styles.
+:root {
+  height: 100vh;
+}
+
+// theme docs: https://developer.ibm.com/tutorials/awb-dynamic-theming-ibm-carbon/.
+[data-carbon-theme='light'] {
+  @include theme.theme($white);
+}
+[data-carbon-theme='g100'] {
+  @include theme.theme($g100);
+}
+[data-carbon-theme='system'] {
+  @media (prefers-color-scheme: light) {
+    @include theme.theme($white); /*Set default to white theme*/
+  }
+
+  @media (prefers-color-scheme: dark) {
+    @include theme.theme($g100); /*Use dark theme for dark system preference*/
+  }
+}
+// --- end to theme stylings.
+
+
+#main-content {
+  padding-bottom: 5%;
+  // height: calc(100vh - 3rem);
+  // // overflow: auto;
+  // margin-top: 3rem;
+  // // margin-left: 3rem;
+}
+
+.scrollable-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: calc(100vh - 3rem);
+  // overflow: auto;
+  margin-top: 3rem;
+  // margin-left: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Carbon Overrides for MD files. */
+ol, ul {
+  list-style-position: inside;
+  padding-left: 1.8rem;
+  margin: 0.5rem 0;
+}
+
+li:not(li:last-of-type) {
+  padding-bottom: 0.5rem;
+}
+
+h1 {
+  padding: 0 0 1.5rem 0;
+}
+
+h2 {
+  padding: 1rem 0;
+}
+
+h3 {
+  padding: 0.75rem 0;
+}
+
+h4 {
+  padding: 0.5rem 0;
+}
+
+h5 {
+  padding: 0.25rem 0;
+}

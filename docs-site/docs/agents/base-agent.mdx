@@ -1,0 +1,23 @@
+---
+title: 'Base Agent'
+draft: false
+---
+
+
+# Base Agent
+You can use the `/connect` command in `a2a-cli` to switch between the agents, view their cards, and send prompts to the agents.
+
+To switch to the **Base agent** while running a2a-cli, type:
+
+```bash
+/connect http://localhost:8000/ibmcloud_base_agent
+```
+
+The **Base agent**'s 📇agent card  should appear:
+![Base agent Agent Card](../images/base_agent_card.png)
+
+The base agent has some basic resource management capabilities built-in, like:
+
+- Targeting an accounts, resource group, region, and cloud API endpoint.
+- Listing resource groups
+- Searching for resources using Lucene query syntax

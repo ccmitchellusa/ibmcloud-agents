@@ -1,0 +1,57 @@
+@use '@carbon/react/scss/theme';
+@use '@carbon/react/scss/breakpoint';
+
+@use '../globals' as g;
+
+.docs-footer {
+  $header-hex: #a4a4a4;
+
+  position: relative;
+  z-index: 8010;
+  padding: 2rem 10%;
+  border-top: 1px solid theme.$border-subtle-01;
+
+  @include breakpoint.breakpoint-down(g.$mobile-breakpoint) {
+    z-index: initial;
+  }
+
+  &__heading {
+    color: theme.$text-secondary;
+  }
+
+  &__copyright {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding-top: 2rem;
+
+    &_container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    &_img_container {
+      padding: 0.5rem;
+      margin: 0 auto;
+    }
+
+    &_img {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+  }
+
+  // overrides.
+  ul {
+    padding-left: 0;
+    margin-left: 0;
+  }
+
+  a {
+    text-decoration: none !important;
+    // color: theme.$text-secondary !important;
+  }
+}
+
